@@ -1,0 +1,42 @@
+{
+  "resource": "/api/products",
+  "path": "/api/products",
+  "httpMethod": "POST",
+  "headers": {
+    "Accept": "*/*",
+    "Content-Type": "application/json",
+    "X-Correlation-ID": "CORR-77665544332211"
+  },
+  "multiValueHeaders": {},
+  "queryStringParameters": null,
+  "multiValueQueryStringParameters": null,
+  "pathParameters": null,
+  "stageVariables": null,
+  "requestContext": {
+    "resourceId": "123456",
+    "resourcePath": "/api/products",
+    "httpMethod": "POST",
+    "extendedRequestId": "ABC123XYZ",
+    "requestTime": "01/Jul/2026:20:50:00 +0000",
+    "requestTimeEpoch": 1782939000000,
+    "requestId": "req-88f585d852a348508e7fb024ff0e2060",
+    "identity": {
+      "cognitoIdentityPoolId": null,
+      "accountId": null,
+      "cognitoIdentityId": null,
+      "caller": null,
+      "sourceIp": "127.0.0.1",
+      "principalOrgId": null,
+      "accessKey": null,
+      "cognitoAuthenticationType": null,
+      "cognitoAuthenticationProvider": null,
+      "userArn": null,
+      "userAgent": "PostmanRuntime/7.40.0",
+      "user": null
+    },
+    "domainName": "example.execute-api.us-east-1.amazonaws.com",
+    "apiId": "example-api"
+  },
+  "body": "{\n  \"product_id\": \"PROD-a8f585d852a348508e7fb024ff0e2060\",\n  \"name\": \"Gaming Laptop\",\n  \"description\": \"RTX 4060 Gaming Laptop\",\n  \"category\": \"Electronics\",\n  \"price\": 65000.00,\n  \"image_url\": \"https://example.com/laptop.jpg\"\n}",
+  "isBase64Encoded": false
+}

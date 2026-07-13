@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "19dd0b57-b14e-4c3d-a183-b78e12c850c0",
+      "receiptHandle": "MessageReceiptHandle",
+      "body": "{\n  \"event_id\": \"EVT-b8fdca53e2a348508e7fb024ff0e2060\",\n  \"event_name\": \"OrderCreated\",\n  \"timestamp\": \"2026-07-01T12:30:00Z\",\n  \"source_service\": \"OrderService\",\n  \"version\": \"1.0\",\n  \"payload\": {\n    \"order_id\": \"ORD-a8f585d852a348508e7fb024ff0e2060\",\n    \"user_id\": \"USER-12345678901234567890123456789012\",\n    \"items\": [\n      {\n        \"product_id\": \"PROD-a8f585d852a348508e7fb024ff0e2060\",\n        \"quantity\": 2\n      }\n    ],\n    \"total_amount\": 130000.00\n  }\n}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1782939000000",
+        "SenderId": "AIDAIT2UOQQZ3A4DPH6UM",
+        "ApproximateFirstReceiveTimestamp": "1782939000001"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "098f6bcd4621d373cade4e832627b4f6",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:order-events",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}

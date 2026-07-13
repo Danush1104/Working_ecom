@@ -1,0 +1,36 @@
+{
+  "Records": [
+    {
+      "messageId": "msg-88f585d852a348508e7fb024ff0e2060",
+      "receiptHandle": "ReceiptHandle-PaymentCompleted",
+      "body": "{\n  \"event_id\": \"EVT-e98df779493949f5a894bd96c7df332f\",\n  \"event_name\": \"PaymentCompleted\",\n  \"timestamp\": \"2026-07-01T12:05:00Z\",\n  \"source_service\": \"PaymentService\",\n  \"version\": \"1.0\",\n  \"payload\": {\n    \"payment_id\": \"PAY-98f585d852a348508e7fb024ff0e2060\",\n    \"order_id\": \"ORD-f8f585d852a348508e7fb024ff0e2060\",\n    \"user_id\": \"USER-e8f585d852a348508e7fb024ff0e2060\",\n    \"amount\": 130000.00,\n    \"items\": [\n      {\n        \"product_id\": \"PROD-a8f585d852a348508e7fb024ff0e2060\",\n        \"quantity\": 2\n      }\n    ]\n  }\n}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1782939900000",
+        "SenderId": "AIDAIT2UOQQZ3A4DPH6UM",
+        "ApproximateFirstReceiveTimestamp": "1782939900001"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "098f6bcd4621d373cade4e832627b4f6",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:inventory-events",
+      "awsRegion": "us-east-1"
+    },
+    {
+      "messageId": "msg-99f585d852a348508e7fb024ff0e2061",
+      "receiptHandle": "ReceiptHandle-PaymentFailed",
+      "body": "{\n  \"event_id\": \"EVT-f98df779493949f5a894bd96c7df332f\",\n  \"event_name\": \"PaymentFailed\",\n  \"timestamp\": \"2026-07-01T12:06:00Z\",\n  \"source_service\": \"PaymentService\",\n  \"version\": \"1.0\",\n  \"payload\": {\n    \"order_id\": \"ORD-98f585d852a348508e7fb024ff0e2062\",\n    \"items\": [\n      {\n        \"product_id\": \"PROD-a8f585d852a348508e7fb024ff0e2060\",\n        \"quantity\": 1\n      }\n    ]\n  }\n}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1782939960000",
+        "SenderId": "AIDAIT2UOQQZ3A4DPH6UM",
+        "ApproximateFirstReceiveTimestamp": "1782939960001"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "098f6bcd4621d373cade4e832627b4f6",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:inventory-events",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}

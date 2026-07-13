@@ -1,0 +1,258 @@
+{
+  "info": {
+    "_postman_id": "9b127a5b-d368-45e3-9828-97f2ee6b3a10",
+    "name": "E-Commerce Inventory Service",
+    "description": "API requests for the Inventory Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Initialize Inventory",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"stock\": 100\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/inventory",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Stock Info",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/inventory/{{product_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "{{product_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "List All Inventory",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/inventory",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Adjust Absolute Stock (Admin)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"stock\": 250\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/inventory/{{product_id}}/stock",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "{{product_id}}",
+            "stock"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Reserve Stock",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 5\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/inventory/reserve",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "reserve"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Release Stock",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/inventory/release",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "release"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Deduct Stock",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 3\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/inventory/deduct",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "deduct"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Restore Stock",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 3\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/inventory/restore",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "restore"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://example.execute-api.us-east-1.amazonaws.com/prod",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "PROD-a8f585d852a348508e7fb024ff0e2060",
+      "type": "string"
+    },
+    {
+      "key": "correlation_id",
+      "value": "CORR-998877",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+{
+  "info": {
+    "_postman_id": "8a067a5b-d368-45e3-9828-97f2ee6b3a09",
+    "name": "E-Commerce Product Service",
+    "description": "API requests for the Product Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Product",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"name\": \"Gaming Laptop\",\n  \"description\": \"RTX 4060 Gaming Laptop\",\n  \"category\": \"Electronics\",\n  \"price\": 65000.00,\n  \"image_url\": \"https://example.com/laptop.jpg\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/products",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products"
+          ]
+        }
+      }
+    },
+    {
+      "name": "List All Products",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/products",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Product by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/products/{{product_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "{{product_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Full Update Product (PUT)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Super Gaming Laptop\",\n  \"description\": \"RTX 4070 Gaming Laptop with 32GB RAM\",\n  \"category\": \"Electronics\",\n  \"price\": 75000.00,\n  \"image_url\": \"https://example.com/laptop_updated.jpg\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/products/{{product_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "{{product_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Partial Update Product (PATCH)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 72000.00\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/products/{{product_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "{{product_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Search Products",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/products/search?category=Electronics&keyword=Laptop&min_price=50000&max_price=80000",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "category",
+              "value": "Electronics"
+            },
+            {
+              "key": "keyword",
+              "value": "Laptop"
+            },
+            {
+              "key": "min_price",
+              "value": "50000"
+            },
+            {
+              "key": "max_price",
+              "value": "80000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Delete Product",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "X-Correlation-ID",
+            "value": "{{correlation_id}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/products/{{product_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "{{product_id}}"
+          ]
+        }
+      }
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://example.execute-api.us-east-1.amazonaws.com/prod",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "PROD-a8f585d852a348508e7fb024ff0e2060",
+      "type": "string"
+    },
+    {
+      "key": "correlation_id",
+      "value": "CORR-998877",
+      "type": "string"
+    }
+  ]
+}
