@@ -19,7 +19,7 @@ class CartService:
     def __init__(self):
         self.repository = CartRepository()
 
-    def add_item(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def add_item(self, data: Dict[str, Any], authorization_header: Optional[str] = None) -> Dict[str, Any]:
         """
         Adds a product to the user's cart.
         Verifies product existence, reserves inventory, and updates/inserts cart item.
@@ -35,7 +35,7 @@ class CartService:
         product_url = f"{Config.PRODUCT_SERVICE_URL}/{product_id}"
         try:
             logger.info(f"Verifying product {product_id} existence in Product Service...")
-            HttpClient.request("GET", product_url, timeout=3.0)
+            HttpClient.request("GET", product_url, headers={"Authorization": authorization_header} if authorization_header else None, timeout=3.0)
         except NotFoundError:
             raise NotFoundError(
                 f"Product {product_id} does not exist in Product Service",
@@ -55,7 +55,7 @@ class CartService:
         inventory_url = f"{Config.INVENTORY_SERVICE_URL}/{product_id}"
         logger.info(f"Checking inventory at URL: {inventory_url}")
         try:
-            inv_response = HttpClient.request("GET", inventory_url, timeout=3.0)
+            inv_response = HttpClient.request("GET", inventory_url, headers={"Authorization": authorization_header} if authorization_header else None, timeout=3.0)
             logger.info(f"Inventory Service HTTP Status: {inv_response.status_code}")
             logger.info(f"Inventory Service Raw Response: {inv_response.text}")
             
@@ -85,13 +85,18 @@ class CartService:
             )
         
         # 4. Reserve stock via Inventory Service
-        reserve_url = f"{Config.INVENTORY_SERVICE_URL}/reserve"
+        reserve_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/reserve"
+        
+        import uuid
+        idempotency_key = f"cart-reserve-{user_id}-{product_id}-{uuid.uuid4()}"
+        
         try:
             logger.info(f"Reserving {quantity} stock for product {product_id}...")
             HttpClient.request(
                 "PATCH", 
                 reserve_url, 
                 json_data={"product_id": product_id, "quantity": quantity},
+                headers={"x-correlation-id": idempotency_key},
                 timeout=3.0
             )
         except Exception as e:
@@ -103,26 +108,42 @@ class CartService:
 
         # 5. Save or update item in DynamoDB
         now = get_utc_timestamp()
-        if existing_item:
-            new_quantity = existing_item.quantity + quantity
-            existing_item.quantity = new_quantity
-            existing_item.updated_at = now
-            self.repository.save_cart_item(existing_item)
-            logger.info(f"Updated cart item quantity: user_id={user_id}, product_id={product_id}, new_quantity={new_quantity}")
-            return existing_item.to_dict()
-        else:
-            new_item = CartItem(
-                user_id=user_id,
-                product_id=product_id,
-                quantity=quantity,
-                created_at=now,
-                updated_at=now
-            )
-            self.repository.save_cart_item(new_item)
-            logger.info(f"Created new cart item: user_id={user_id}, product_id={product_id}, quantity={quantity}")
-            return new_item.to_dict()
+        try:
+            if existing_item:
+                new_quantity = existing_item.quantity + quantity
+                existing_item.quantity = new_quantity
+                existing_item.updated_at = now
+                self.repository.save_cart_item(existing_item)
+                logger.info(f"Updated cart item quantity: user_id={user_id}, product_id={product_id}, new_quantity={new_quantity}")
+                return existing_item.to_dict()
+            else:
+                new_item = CartItem(
+                    user_id=user_id,
+                    product_id=product_id,
+                    quantity=quantity,
+                    created_at=now,
+                    updated_at=now
+                )
+                self.repository.save_cart_item(new_item)
+                logger.info(f"Created new cart item: user_id={user_id}, product_id={product_id}, quantity={quantity}")
+                return new_item.to_dict()
+        except Exception as db_err:
+            # COMPENSATING TRANSACTION: release the reservation we just made
+            logger.error(f"Cart DB write failed for product {product_id}. Releasing reservation.")
+            release_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/release"
+            try:
+                HttpClient.request(
+                    "PATCH", 
+                    release_url,
+                    json_data={"product_id": product_id, "quantity": quantity},
+                    headers={"x-correlation-id": f"rollback-{idempotency_key}"},
+                    timeout=3.0
+                )
+            except Exception as release_err:
+                logger.error(f"CRITICAL: Failed to release reservation after DB failure: {release_err}")
+            raise InternalServerError(f"Failed to save cart item: {str(db_err)}", ERROR_INTERNAL_SERVER_ERROR)
 
-    def get_cart(self, user_id: str) -> Dict[str, Any]:
+    def get_cart(self, user_id: str, authorization_header: Optional[str] = None) -> Dict[str, Any]:
         """
         Retrieves all items in the user's cart and enriches them with Product Service data.
         Calculates subtotal and grand_total.
@@ -140,7 +161,7 @@ class CartService:
             product_url = f"{Config.PRODUCT_SERVICE_URL}/{item.product_id}"
             try:
                 logger.info(f"Fetching latest product details for {item.product_id}...")
-                response = HttpClient.request("GET", product_url, timeout=3.0)
+                response = HttpClient.request("GET", product_url, headers={"Authorization": authorization_header} if authorization_header else None, timeout=3.0)
                 product_data = response.json().get("data", {})
                 
                 # Fetch price safely
@@ -177,7 +198,7 @@ class CartService:
             "grand_total": grand_total
         }
 
-    def update_quantity(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_quantity(self, data: Dict[str, Any], authorization_header: Optional[str] = None) -> Dict[str, Any]:
         """
         Updates the quantity of a product in the cart.
         Only reserves/releases the difference.
@@ -205,7 +226,7 @@ class CartService:
             # Verify product exists in Product Service before reserving more
             product_url = f"{Config.PRODUCT_SERVICE_URL}/{product_id}"
             try:
-                HttpClient.request("GET", product_url, timeout=3.0)
+                HttpClient.request("GET", product_url, headers={"Authorization": authorization_header} if authorization_header else None, timeout=3.0)
             except NotFoundError:
                 raise NotFoundError(
                     f"Product {product_id} does not exist in Product Service",
@@ -218,7 +239,7 @@ class CartService:
             inventory_url = f"{Config.INVENTORY_SERVICE_URL}/{product_id}"
             logger.info(f"Checking inventory at URL: {inventory_url}")
             try:
-                inv_response = HttpClient.request("GET", inventory_url, timeout=3.0)
+                inv_response = HttpClient.request("GET", inventory_url, headers={"Authorization": authorization_header} if authorization_header else None, timeout=3.0)
                 logger.info(f"Inventory Service HTTP Status: {inv_response.status_code}")
                 logger.info(f"Inventory Service Raw Response: {inv_response.text}")
                 
@@ -248,13 +269,18 @@ class CartService:
                 )
 
             # Reserve additional quantity
-            reserve_url = f"{Config.INVENTORY_SERVICE_URL}/reserve"
+            reserve_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/reserve"
+            
+            import uuid
+            idempotency_key = f"cart-update-{user_id}-{product_id}-{uuid.uuid4()}"
+            
             try:
                 logger.info(f"Reserving additional {diff} stock for product {product_id}...")
                 HttpClient.request(
                     "PATCH", 
                     reserve_url, 
                     json_data={"product_id": product_id, "quantity": diff},
+                    headers={"x-correlation-id": idempotency_key},
                     timeout=3.0
                 )
             except Exception as e:
@@ -268,13 +294,18 @@ class CartService:
             diff = old_quantity - new_quantity
             
             # Release difference in quantity
-            release_url = f"{Config.INVENTORY_SERVICE_URL}/release"
+            release_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/release"
+            
+            import uuid
+            idempotency_key = f"cart-release-{user_id}-{product_id}-{uuid.uuid4()}"
+            
             try:
                 logger.info(f"Releasing {diff} stock for product {product_id}...")
                 HttpClient.request(
                     "PATCH", 
                     release_url, 
                     json_data={"product_id": product_id, "quantity": diff},
+                    headers={"x-correlation-id": idempotency_key},
                     timeout=3.0
                 )
             except Exception as e:
@@ -309,13 +340,18 @@ class CartService:
             )
             
         # 2. Release inventory
-        release_url = f"{Config.INVENTORY_SERVICE_URL}/release"
+        release_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/release"
+        
+        import uuid
+        idempotency_key = f"cart-remove-{user_id}-{product_id}-{uuid.uuid4()}"
+        
         try:
             logger.info(f"Releasing {existing_item.quantity} stock for product {product_id}...")
             HttpClient.request(
                 "PATCH", 
                 release_url, 
                 json_data={"product_id": product_id, "quantity": existing_item.quantity},
+                headers={"x-correlation-id": idempotency_key},
                 timeout=3.0
             )
         except (NotFoundError, ValidationError) as e:
@@ -345,13 +381,18 @@ class CartService:
         # 2. Loop through every cart item, release reservation, delete item
         for item in cart_items:
             # Release inventory
-            release_url = f"{Config.INVENTORY_SERVICE_URL}/release"
+            release_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/release"
+            
+            import uuid
+            idempotency_key = f"cart-clear-{user_id}-{item.product_id}-{uuid.uuid4()}"
+            
             try:
                 logger.info(f"Releasing {item.quantity} stock for product {item.product_id}...")
                 HttpClient.request(
                     "PATCH", 
                     release_url, 
                     json_data={"product_id": item.product_id, "quantity": item.quantity},
+                    headers={"x-correlation-id": idempotency_key},
                     timeout=3.0
                 )
             except Exception as e:
@@ -377,13 +418,18 @@ class CartService:
         # 2. Loop through and delete
         for item in cart_items:
             if release_inventory:
-                release_url = f"{Config.INVENTORY_SERVICE_URL}/release"
+                release_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/release"
+                
+                import uuid
+                idempotency_key = f"cart-internal-clear-{user_id}-{item.product_id}-{uuid.uuid4()}"
+                
                 try:
                     logger.info(f"Internal release {item.quantity} stock for product {item.product_id}...")
                     HttpClient.request(
                         "PATCH", 
                         release_url, 
                         json_data={"product_id": item.product_id, "quantity": item.quantity},
+                        headers={"x-correlation-id": idempotency_key},
                         timeout=3.0
                     )
                 except Exception as e:
@@ -394,7 +440,7 @@ class CartService:
             
         logger.info(f"Internally cleared cart for user: {user_id} (releaseInventory={release_inventory})")
 
-    def get_all_carts(self, limit: Optional[int] = None, start_key: Optional[dict] = None) -> Tuple[List[Dict[str, Any]], Optional[dict]]:
+    def get_all_carts(self, limit: Optional[int] = None, start_key: Optional[dict] = None, authorization_header: Optional[str] = None) -> Tuple[List[Dict[str, Any]], Optional[dict]]:
         """
         Retrieves all carts across all users with optional DynamoDB pagination.
         Returns (list_of_user_cart_dicts, next_page_key_dict_or_None).
@@ -415,7 +461,7 @@ class CartService:
         for prod_id in unique_product_ids:
             product_url = f"{Config.PRODUCT_SERVICE_URL}/{prod_id}"
             try:
-                response = HttpClient.request("GET", product_url, timeout=3.0)
+                response = HttpClient.request("GET", product_url, headers={"Authorization": authorization_header} if authorization_header else None, timeout=3.0)
                 product_cache[prod_id] = response.json().get("data", {})
             except Exception as e:
                 logger.warning(f"Failed to fetch details for product {prod_id}: {str(e)}")

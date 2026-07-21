@@ -3,8 +3,12 @@ import base64
 from typing import Any, Dict
 from app.services.cart_service import CartService
 from app.response import build_response
+from app.utils.auth import require_admin
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_admin(event)
+
+    auth_header = event.get("headers", {}).get("authorization") or event.get("headers", {}).get("Authorization")
     service = CartService()
 
     query_params = event.get("queryStringParameters") or {}
@@ -27,7 +31,7 @@ def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     else:
         start_key = None
 
-    all_carts, next_key = service.get_all_carts(limit=limit, start_key=start_key)
+    all_carts, next_key = service.get_all_carts(limit=limit, start_key=start_key, authorization_header=auth_header)
 
     if next_key is not None:
         next_page_key = base64.b64encode(json.dumps(next_key).encode()).decode()

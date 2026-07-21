@@ -71,13 +71,15 @@ class ProductRepository:
 
         update_expression = "SET " + ", ".join(update_expression_parts)
 
+        expression_attribute_values[":is_active_condition"] = True
+        
         try:
             self.table.update_item(
                 Key={"product_id": product_id},
                 UpdateExpression=update_expression,
                 ExpressionAttributeNames=expression_attribute_names,
                 ExpressionAttributeValues=expression_attribute_values,
-                ConditionExpression="attribute_exists(product_id)"
+                ConditionExpression="attribute_exists(product_id) AND is_active = :is_active_condition"
             )
         except ClientError as e:
             if e.response["Error"]["Code"] == "ConditionalCheckFailedException":

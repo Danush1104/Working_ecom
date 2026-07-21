@@ -3,8 +3,10 @@ import base64
 from typing import Any, Dict
 from app.services.inventory_service import InventoryService
 from app.response import build_response
+from app.utils.auth import require_admin
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_admin(event)
     service = InventoryService()
 
     query_params = event.get("queryStringParameters") or {}

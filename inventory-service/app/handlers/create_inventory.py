@@ -2,15 +2,20 @@ from typing import Any, Dict
 from app.services.inventory_service import InventoryService
 from app.utils.helpers import parse_json_body
 from app.response import success_response
+from app.utils.auth import require_admin
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_admin(event)
     """
     Handler for POST /api/inventory.
     Initializes product stock.
     """
     body = parse_json_body(event)
+    
+    auth_header = event.get("headers", {}).get("authorization") or event.get("headers", {}).get("Authorization")
+    
     service = InventoryService()
-    inventory_data = service.create_inventory(body)
+    inventory_data = service.create_inventory(body, authorization_header=auth_header)
     
     return success_response(
         message="Inventory initialized successfully",

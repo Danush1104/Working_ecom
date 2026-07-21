@@ -1,5 +1,5 @@
 import time
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Optional
 from botocore.exceptions import ClientError
 from app.models.product import Product
@@ -134,6 +134,10 @@ class ProductService:
 
     def delete_product(self, product_id: str) -> None:
         """Performs soft-delete on product."""
+        existing = self.repository.get_product(product_id)
+        if not existing or not existing.is_active:
+            raise NotFoundError(f"Product with ID {product_id} not found", ERROR_PRODUCT_NOT_FOUND)
+            
         now = get_utc_timestamp()
         try:
             self.repository.delete_product(product_id, now)

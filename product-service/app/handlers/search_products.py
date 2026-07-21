@@ -1,8 +1,10 @@
 from typing import Any, Dict
 from app.services.product_service import ProductService
 from app.response import success_response
+from app.utils.auth import require_user_or_admin
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_user_or_admin(event)
     """
     Handler for GET /api/products/search.
     Searches products by category, keyword, and price ranges.

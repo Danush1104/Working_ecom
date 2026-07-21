@@ -2,8 +2,10 @@ from typing import Any, Dict
 from app.services.product_service import ProductService
 from app.errors import ValidationError
 from app.response import success_response
+from app.utils.auth import require_user_or_admin
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_user_or_admin(event)
     """
     Handler for GET /api/products/{product_id}.
     Retrieves a single product.

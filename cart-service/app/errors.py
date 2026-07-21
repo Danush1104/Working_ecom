@@ -35,3 +35,15 @@ class InternalServerError(AppError):
     """Raised for unexpected internal server errors."""
     def __init__(self, message: str, error_code: str = "INTERNAL_SERVER_ERROR"):
         super().__init__(message, error_code, 500)
+
+
+class UnauthorizedError(AppError):
+    """Raised when authentication fails."""
+    def __init__(self, message: str = "Unauthorized", error_code: str = "UNAUTHORIZED"):
+        super().__init__(message, error_code, 401)
+
+
+class ForbiddenError(AppError):
+    """Raised when authorization fails."""
+    def __init__(self, message: str = "Forbidden", error_code: str = "FORBIDDEN"):
+        super().__init__(message, error_code, 403)

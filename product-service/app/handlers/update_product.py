@@ -3,8 +3,10 @@ from app.services.product_service import ProductService
 from app.utils.helpers import parse_json_body
 from app.errors import ValidationError
 from app.response import success_response
+from app.utils.auth import require_admin
 
 def handle_put(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_admin(event)
     """
     Handler for PUT /api/products/{product_id}.
     Fully updates a product.
@@ -26,6 +28,7 @@ def handle_put(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 
 def handle_patch(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_admin(event)
     """
     Handler for PATCH /api/products/{product_id}.
     Partially updates a product.

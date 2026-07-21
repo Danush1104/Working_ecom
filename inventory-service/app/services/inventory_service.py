@@ -24,7 +24,7 @@ class InventoryService:
     def __init__(self):
         self.repository = InventoryRepository()
 
-    def create_inventory(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_inventory(self, data: Dict[str, Any], authorization_header: Optional[str] = None) -> Dict[str, Any]:
         """
         Validates input, checks product existence in Product Service, 
         and initializes inventory record in DynamoDB.
@@ -38,7 +38,8 @@ class InventoryService:
         product_url = f"{Config.PRODUCT_SERVICE_URL}/{product_id}"
         try:
             logger.info(f"Verifying product {product_id} existence in Product Service...")
-            HttpClient.request("GET", product_url, timeout=3.0)
+            req_headers = {"Authorization": authorization_header} if authorization_header else None
+            HttpClient.request("GET", product_url, headers=req_headers, timeout=3.0)
         except NotFoundError:
             raise NotFoundError(
                 f"Product {product_id} does not exist in Product Service",
@@ -231,11 +232,21 @@ class InventoryService:
                 )
             raise
 
-    def restore_stock(self, product_id: str, quantity: int) -> Dict[str, Any]:
+    def restore_stock(self, product_id: str, quantity: int, event_id: Optional[str] = None) -> Dict[str, Any]:
         """Atomically restores stock level (increases stock)."""
+        if event_id and self.repository.is_event_processed(event_id):
+            logger.info(f"Event {event_id} already processed. Skipping restore_stock for product {product_id}.")
+            updated = self.repository.get_inventory(product_id)
+            return updated.to_dict() if updated else {}
+
         now = get_utc_timestamp()
         try:
             self.repository.restore_stock(product_id, quantity, now)
+            if event_id:
+                try:
+                    self.repository.mark_event_processed(event_id, f"RESTORE_{product_id}", now)
+                except Exception as e:
+                    logger.warning(f"Failed to record idempotency for event {event_id}: {str(e)}")
             logger.info(f"Restored stock: product_id={product_id}, quantity={quantity}")
             
             updated = self.repository.get_inventory(product_id)

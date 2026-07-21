@@ -1,0 +1,154 @@
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Edit2, Trash2, Loader2, Power } from 'lucide-react';
+import { DataTable } from '../../components/admin/DataTable';
+import { FilterBar } from '../../components/admin/FilterBar';
+import { StatusBadge } from '../../components/admin/StatusBadge';
+import { ProductModal } from '../../components/admin/ProductModal';
+import type { ProductFormData } from '../../components/admin/ProductModal';
+import { DeleteDialog } from '../../components/admin/DeleteDialog';
+import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, usePatchProduct } from '../../hooks/useProducts';
+import type { Product } from '../../api/productService';
+
+export default function Products() {
+  const { data: products, isLoading, isError } = useProducts();
+  const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
+  const deleteProduct = useDeleteProduct();
+  const patchProduct = usePatchProduct();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const handleAdd = () => {
+    setSelectedProduct(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleToggleActive = (product: Product) => {
+    patchProduct.mutate({ id: product.id, data: { is_active: !product.is_active } });
+  };
+
+  const handleSave = (data: ProductFormData) => {
+    const payload = {
+      ...data,
+      price: Number(data.price)
+    };
+
+    if (selectedProduct) {
+      updateProduct.mutate({ id: selectedProduct.id, data: payload });
+    } else {
+      createProduct.mutate(payload);
+    }
+  };
+
+  const confirmDelete = () => {
+    if (selectedProduct) {
+      deleteProduct.mutate(selectedProduct.id);
+    }
+  };
+
+  const columns: any[] = [
+    {
+      header: 'Product',
+      accessor: (item: Product) => (
+        <div className="flex items-center gap-3">
+          <img src={item.image_url} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-gray-100 dark:bg-gray-800" />
+          <div className="flex flex-col">
+            <span className="font-medium text-gray-900 dark:text-white">{item.name}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">{item.id}</span>
+          </div>
+        </div>
+      )
+    },
+    { header: 'Category', accessor: 'category' },
+    { 
+      header: 'Price', 
+      accessor: (item: Product) => `$${Number(item.price).toFixed(2)}` 
+    },
+    { 
+      header: 'Status', 
+      accessor: (item: Product) => <StatusBadge status={item.is_active ? 'Active' : 'Inactive'} />
+    },
+    {
+      header: 'Actions',
+      className: 'text-right',
+      accessor: (item: Product) => (
+        <div className="flex items-center justify-end gap-2">
+          <button 
+            onClick={() => handleToggleActive(item)} 
+            className={`p-1.5 transition-colors ${item.is_active ? 'text-green-500 hover:text-green-600' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+            title={item.is_active ? 'Deactivate' : 'Activate'}
+          >
+            <Power className="h-4 w-4" />
+          </button>
+          <button onClick={() => handleEdit(item)} className="p-1.5 text-gray-400 hover:text-primary transition-colors">
+            <Edit2 className="h-4 w-4" />
+          </button>
+          <button onClick={() => handleDeleteClick(item)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Products</h1>
+      </div>
+
+      <FilterBar 
+        placeholder="Search products..." 
+        onAdd={handleAdd} 
+        addLabel="Add Product" 
+      />
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : isError ? (
+        <div className="text-center py-10 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20">
+          <p className="text-red-500 font-medium">Failed to load products. Please check the backend connection.</p>
+        </div>
+      ) : (
+        <DataTable 
+          columns={columns} 
+          data={Array.isArray(products) ? products : []} 
+          keyExtractor={(item) => item.id} 
+        />
+      )}
+
+      <ProductModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+        initialData={selectedProduct ? {
+          ...selectedProduct,
+          price: selectedProduct.price.toString()
+        } : null}
+        title={selectedProduct ? "Edit Product" : "Add Product"}
+      />
+
+      <DeleteDialog 
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        itemName={selectedProduct?.name}
+      />
+    </motion.div>
+  );
+}

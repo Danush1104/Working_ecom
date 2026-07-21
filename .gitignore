@@ -1,0 +1,45 @@
+# Python packages (installed directly in service folders)
+boto3/
+boto3-*/
+botocore/
+botocore-*/
+certifi/
+certifi-*/
+charset_normalizer/
+charset_normalizer-*/
+dateutil/
+dotenv/
+idna/
+idna-*/
+jmespath/
+jmespath-*/
+requests/
+requests-*/
+s3transfer/
+s3transfer-*/
+six.py
+six-*/
+urllib3/
+urllib3-*/
+python_dateutil-*/
+python_dotenv-*/
+bin/
+*.dist-info/
+*.pyd
+*.zip
+*.exe
+
+# Env files
+.env
+.env.*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Frontend
+frontend/node_modules/
+
+# Notification service zip
+notification-service/app.zip

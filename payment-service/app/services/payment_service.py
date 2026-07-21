@@ -1,3 +1,4 @@
+import os
 from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Optional, Tuple
 from app.config import Config
@@ -20,7 +21,7 @@ class PaymentService:
     def __init__(self):
         self.repository = PaymentRepository()
 
-    def create_payment(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_payment(self, data: Dict[str, Any], authorization_header: Optional[str] = None) -> Dict[str, Any]:
         payment_validator.validate_create_payment(data)
         
         order_id = data["order_id"]
@@ -31,7 +32,8 @@ class PaymentService:
         order_url = f"{Config.ORDER_SERVICE_URL}/{user_id}/{order_id}"
         try:
             logger.info(f"Fetching order {order_id} for payment validation...")
-            order_response = HttpClient.request("GET", order_url, timeout=5.0)
+            req_headers = {"Authorization": authorization_header} if authorization_header else None
+            order_response = HttpClient.request("GET", order_url, headers=req_headers, timeout=5.0)
             order_data = order_response.json().get("data", {})
         except NotFoundError:
             raise NotFoundError(
@@ -135,7 +137,8 @@ class PaymentService:
         
         try:
             logger.info(f"Notifying Order Service: {payment.order_id} -> status={new_status} (URL: {order_webhook_url})")
-            HttpClient.request("PATCH", order_webhook_url, json_data=webhook_body, timeout=10.0)
+            secret = os.getenv("INTERNAL_WEBHOOK_SECRET", "default-internal-secret-123")
+            HttpClient.request("PATCH", order_webhook_url, json_data=webhook_body, headers={"x-internal-secret": secret}, timeout=10.0)
         except Exception as e:
             logger.error(f"Failed to update Order Service webhook at {order_webhook_url}: {str(e)}")
             raise InternalServerError(f"Order Service status propagation failed for URL '{order_webhook_url}': {str(e)}", ERROR_INTERNAL_SERVER_ERROR)
@@ -165,7 +168,8 @@ class PaymentService:
         
         try:
             logger.info(f"Notifying Order Service of Refund: {payment.order_id} (URL: {order_webhook_url})")
-            HttpClient.request("PATCH", order_webhook_url, json_data=webhook_body, timeout=10.0)
+            secret = os.getenv("INTERNAL_WEBHOOK_SECRET", "default-internal-secret-123")
+            HttpClient.request("PATCH", order_webhook_url, json_data=webhook_body, headers={"x-internal-secret": secret}, timeout=10.0)
         except Exception as e:
             logger.error(f"Failed to update Order Service webhook for refund at {order_webhook_url}: {str(e)}")
             raise InternalServerError(f"Order Service status propagation failed for refund URL '{order_webhook_url}': {str(e)}", ERROR_INTERNAL_SERVER_ERROR)

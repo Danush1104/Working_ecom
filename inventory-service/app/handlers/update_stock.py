@@ -3,8 +3,10 @@ from app.services.inventory_service import InventoryService
 from app.utils.helpers import parse_json_body
 from app.errors import ValidationError
 from app.response import success_response
+from app.utils.auth import require_admin
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_admin(event)
     """
     Handler for PATCH /api/inventory/{product_id}/stock.
     Adjusts absolute stock level.

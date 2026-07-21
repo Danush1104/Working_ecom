@@ -3,9 +3,11 @@ import base64
 from typing import Any, Dict
 from app.services.payment_service import PaymentService
 from app.response import success_response, build_response
+from app.utils.auth import require_admin
 from app.logger import logger
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_admin(event)
     """
     Handler for GET /api/payments/all.
     Retrieves all payment transactions across all orders, sorted chronologically descending.

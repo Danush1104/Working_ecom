@@ -1,6 +1,7 @@
 from typing import Any, Dict
 from app.services.order_service import OrderService
 from app.response import success_response
+from app.utils.auth import require_self_or_admin
 from app.errors import ValidationError
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -15,6 +16,7 @@ def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     if not user_id or not order_id:
         raise ValidationError("User ID and Order ID are required in path parameters", "INVALID_REQUEST")
         
+    require_self_or_admin(event, user_id)
     service = OrderService()
     order_data = service.get_order(user_id, order_id)
     

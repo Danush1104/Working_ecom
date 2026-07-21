@@ -2,8 +2,11 @@ from typing import Any, Dict
 from app.services.product_service import ProductService
 from app.utils.helpers import parse_json_body
 from app.response import success_response
+from app.utils.auth import require_admin
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    
+    require_admin(event)
     """
     Handler for POST /api/products.
     Creates a new product.

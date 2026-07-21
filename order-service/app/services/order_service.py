@@ -1,3 +1,4 @@
+import os
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 import time
@@ -26,7 +27,7 @@ class OrderService:
     def __init__(self):
         self.repository = OrderRepository()
 
-    def checkout(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def checkout(self, data: Dict[str, Any], authorization_header: Optional[str] = None) -> Dict[str, Any]:
         """
         Processes checkout of the user's cart, creating a pending order.
         """
@@ -41,7 +42,7 @@ class OrderService:
         cart_url = f"{Config.CART_SERVICE_URL}/{user_id}"
         try:
             logger.info(f"Fetching cart for user {user_id}...")
-            response = HttpClient.request("GET", cart_url, timeout=3.0)
+            response = HttpClient.request("GET", cart_url, headers={"Authorization": authorization_header} if authorization_header else None, timeout=3.0)
             cart_resp = response.json()
             cart_data = cart_resp.get("data", {})
         except NotFoundError:
@@ -65,7 +66,7 @@ class OrderService:
             # Fetch latest product details
             product_url = f"{Config.PRODUCT_SERVICE_URL}/{product_id}"
             try:
-                prod_response = HttpClient.request("GET", product_url, timeout=3.0)
+                prod_response = HttpClient.request("GET", product_url, headers={"Authorization": authorization_header} if authorization_header else None, timeout=3.0)
                 product_data = prod_response.json().get("data", {})
             except Exception as e:
                 logger.error(f"Failed to fetch product details for {product_id}: {str(e)}")
@@ -119,7 +120,8 @@ class OrderService:
         for attempt in range(1, 3):  # two attempts total
             try:
                 logger.info(f"Clearing cart for user {user_id} without releasing stock (attempt {attempt})...")
-                HttpClient.request("DELETE", clear_cart_url, timeout=3.0)
+                secret = os.getenv("INTERNAL_WEBHOOK_SECRET", "default-internal-secret-123")
+                HttpClient.request("DELETE", clear_cart_url, headers={"x-internal-secret": secret}, timeout=3.0)
                 cart_cleared = True
                 break
             except Exception as e:
@@ -191,7 +193,7 @@ class OrderService:
             )
 
         # Release stock reservation in Inventory Service (reservation → available)
-        release_url = f"{Config.INVENTORY_SERVICE_URL}/release"
+        release_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/release"
         for item in order.items:
             try:
                 logger.info(f"Releasing reserved stock for product {item.product_id} (qty={item.quantity})...")
@@ -274,7 +276,7 @@ class OrderService:
 
             if not already_deducted:
                 # Deduct inventory stock (converts reservation → consumption)
-                deduct_url = f"{Config.INVENTORY_SERVICE_URL}/deduct"
+                deduct_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/deduct"
                 for item in order.items:
                     try:
                         logger.info(f"Deducting stock for product {item.product_id} (qty={item.quantity})...")
@@ -305,7 +307,7 @@ class OrderService:
 
         elif new_payment_status == "FAILED":
             # Release inventory reservation back to available stock
-            release_url = f"{Config.INVENTORY_SERVICE_URL}/release"
+            release_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/release"
             for item in order.items:
                 try:
                     logger.info(f"Releasing stock for product {item.product_id} (qty={item.quantity})...")
@@ -326,7 +328,7 @@ class OrderService:
             # Restore inventory stock (increases stock, does NOT touch reserved).
             # reserved=0 at this point because payment was SUCCESS and /deduct already ran.
             if order.payment_status == "SUCCESS":
-                restore_url = f"{Config.INVENTORY_SERVICE_URL}/restore"
+                restore_url = f"{Config.INVENTORY_SERVICE_URL.replace('/api/inventory', '/internal/inventory')}/restore"
                 for item in order.items:
                     try:
                         logger.info(f"Restoring refunded stock for product {item.product_id} (qty={item.quantity})...")

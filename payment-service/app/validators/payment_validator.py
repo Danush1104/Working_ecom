@@ -9,7 +9,8 @@ SUPPORTED_PROCESS_STATUSES = {"SUCCESS", "FAILED"}
 
 def validate_create_payment(data: Dict[str, Any]) -> None:
     """Validates creation request payload."""
-    required_fields = ["order_id", "user_id", "amount"]
+    required_fields = ["order_id", "amount"]
+    # user_id is injected by auth handler
     
     for field in required_fields:
         if field not in data or data[field] is None:

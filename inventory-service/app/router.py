@@ -15,10 +15,10 @@ from app.errors import NotFoundError
 
 ROUTE_PATTERNS = [
     ("GET", re.compile(r"^/health/?$"), health.handle),
-    ("PATCH", re.compile(r"^/api/inventory/reserve/?$"), reserve_stock.handle),
-    ("PATCH", re.compile(r"^/api/inventory/release/?$"), release_stock.handle),
-    ("PATCH", re.compile(r"^/api/inventory/deduct/?$"), deduct_stock.handle),
-    ("PATCH", re.compile(r"^/api/inventory/restore/?$"), restore_stock.handle),
+    ("PATCH", re.compile(r"^/internal/inventory/reserve/?$"), reserve_stock.handle),
+    ("PATCH", re.compile(r"^/internal/inventory/release/?$"), release_stock.handle),
+    ("PATCH", re.compile(r"^/internal/inventory/deduct/?$"), deduct_stock.handle),
+    ("PATCH", re.compile(r"^/internal/inventory/restore/?$"), restore_stock.handle),
     ("POST", re.compile(r"^/api/inventory/?$"), create_inventory.handle),
     ("GET", re.compile(r"^/api/inventory/?$"), list_inventory.handle),
     ("GET", re.compile(r"^/api/inventory/(?P<product_id>[^/]+)/?$"), get_inventory.handle),

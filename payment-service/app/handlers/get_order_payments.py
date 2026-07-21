@@ -1,9 +1,11 @@
 from typing import Any, Dict
 from app.services.payment_service import PaymentService
 from app.response import success_response
+from app.utils.auth import require_user_or_admin
 from app.errors import ValidationError
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_user_or_admin(event)
     """
     Handler for GET /api/payments/order/{order_id}.
     Retrieves all payments associated with an order ID.

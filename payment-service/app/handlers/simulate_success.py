@@ -2,8 +2,10 @@ from typing import Any, Dict
 from app.services.payment_service import PaymentService
 from app.response import success_response
 from app.errors import ValidationError
+from app.utils.auth import require_admin
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_admin(event)
     """
     Handler for POST /api/payments/{payment_id}/simulate-success.
     Simulates a successful payment callback from a mock payment gateway.

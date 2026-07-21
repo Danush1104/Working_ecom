@@ -1,6 +1,7 @@
 from typing import Any, Dict
 from app.services.cart_service import CartService
 from app.response import success_response
+from app.utils.auth import require_self_or_admin
 from app.errors import ValidationError
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -15,6 +16,7 @@ def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     if not user_id or not product_id:
         raise ValidationError("User ID and Product ID are required in path parameters", "INVALID_REQUEST")
         
+    require_self_or_admin(event, user_id)
     service = CartService()
     service.remove_item(user_id, product_id)
     

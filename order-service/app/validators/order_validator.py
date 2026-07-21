@@ -9,6 +9,7 @@ SUPPORTED_PAYMENT_STATUSES = {"SUCCESS", "FAILED", "REFUNDED"}
 def validate_checkout_input(data: Dict[str, Any]) -> None:
     """Validates checkout request payload."""
     required_fields = ["user_id", "payment_method", "customer_email"]
+    # user_id is injected by auth handler so we do not force the client to send it.
     
     for field in required_fields:
         if field not in data or data[field] is None:

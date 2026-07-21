@@ -3,8 +3,10 @@ import base64
 from typing import Any, Dict
 from app.services.order_service import OrderService
 from app.response import build_response
+from app.utils.auth import require_admin
 
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_admin(event)
     """
     Handler for GET /api/orders/all.
     Retrieves all orders across all users, sorted chronologically descending.

@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict
 from app.services.order_service import OrderService
 from app.utils.helpers import parse_json_body
@@ -9,6 +10,12 @@ def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Handler for PATCH /internal/orders/{user_id}/{order_id}/payment.
     Webhook receiver that updates the payment status of an order.
     """
+    headers = event.get("headers") or {}
+    secret = headers.get("x-internal-secret") or headers.get("X-Internal-Secret")
+    INTERNAL_SECRET = os.getenv("INTERNAL_WEBHOOK_SECRET", "default-internal-secret-123")
+    if not secret or secret != INTERNAL_SECRET:
+        raise ValidationError("Unauthorized internal call", "UNAUTHORIZED")
+
     path_params = event.get("pathParameters") or {}
     user_id = path_params.get("user_id")
     order_id = path_params.get("order_id")
