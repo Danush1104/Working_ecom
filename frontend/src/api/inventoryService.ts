@@ -29,11 +29,21 @@ export const inventoryService = {
 
   createInventory: async (data: { product_id: string; stock: number }): Promise<Inventory> => {
     const response = await apiClient.post(INVENTORY_API_URL, data);
-    return response.data;
+    return response.data?.data || response.data;
   },
 
   updateStock: async (productId: string, data: { stock: number }): Promise<Inventory> => {
     const response = await apiClient.patch(`${INVENTORY_API_URL}/${productId}/stock`, data);
-    return response.data;
+    return response.data?.data || response.data;
+  },
+
+  restoreStock: async (productId: string, data: { quantity: number }): Promise<Inventory> => {
+    const response = await apiClient.patch(`${INVENTORY_API_URL}/${productId}/restore`, data);
+    return response.data?.data || response.data;
+  },
+
+  deductStock: async (productId: string, data: { quantity: number }): Promise<Inventory> => {
+    const response = await apiClient.patch(`${INVENTORY_API_URL}/${productId}/deduct`, data);
+    return response.data?.data || response.data;
   }
 };

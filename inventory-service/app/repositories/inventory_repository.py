@@ -169,6 +169,24 @@ class InventoryRepository:
             logger.error(f"Failed to deduct stock in DynamoDB: {str(e)}")
             raise DatabaseError(f"Database error during stock deduction: {str(e)}")
 
+    def admin_deduct_stock(self, product_id: str, quantity: int, updated_at: str) -> None:
+        """Atomically deducts stock administratively (decreases total stock without touching reserved)."""
+        try:
+            self.table.update_item(
+                Key={"product_id": product_id},
+                UpdateExpression="SET stock = stock - :qty, updated_at = :updated_at",
+                ConditionExpression="attribute_exists(product_id) AND (stock - :qty) >= reserved",
+                ExpressionAttributeValues={
+                    ":qty": quantity,
+                    ":updated_at": updated_at
+                }
+            )
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+                raise e
+            logger.error(f"Failed to administratively deduct stock in DynamoDB: {str(e)}")
+            raise DatabaseError(f"Database error during administrative stock deduction: {str(e)}")
+
     def restore_stock(self, product_id: str, quantity: int, updated_at: str) -> None:
         """Atomically restores stock after cancellations (increases stock level)."""
         try:
@@ -210,6 +228,9 @@ class InventoryRepository:
             )
             return "Item" in response
         except ClientError as e:
+            if e.response["Error"]["Code"] == "ResourceNotFoundException":
+                logger.warning("Processed events table not found. Skipping idempotency check.")
+                return False
             logger.error(f"Failed to query processed event from DynamoDB: {str(e)}")
             raise DatabaseError(f"Database error reading processed events: {str(e)}")
 
@@ -226,7 +247,11 @@ class InventoryRepository:
                 ConditionExpression="attribute_not_exists(event_id)"
             )
         except ClientError as e:
-            if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            error_code = e.response["Error"]["Code"]
+            if error_code == "ConditionalCheckFailedException":
                 raise e
+            if error_code == "ResourceNotFoundException":
+                logger.warning("Processed events table not found. Skipping idempotency mark.")
+                return
             logger.error(f"Failed to save processed event ID to DynamoDB: {str(e)}")
             raise DatabaseError(f"Database error saving processed event: {str(e)}")

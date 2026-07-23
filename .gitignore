@@ -43,3 +43,18 @@ frontend/node_modules/
 
 # Notification service zip
 notification-service/app.zip
+
+# Root-level zips and scratch scripts
+wishlist.zip
+wishlist_fixed.zip
+notification.zip
+review.zip
+audit_imports.py
+find_ui.py
+populate_data.py
+update_zip.py
+
+# Root node_modules
+/node_modules/
+package-lock.json
+package.json

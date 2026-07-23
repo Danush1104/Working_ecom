@@ -6,13 +6,26 @@ from app.handlers import (
     update_product,
     delete_product,
     list_products,
-    search_products
+    search_products,
+    create_category,
+    get_categories,
+    update_category,
+    delete_category,
+    create_admin
 )
 from app.errors import NotFoundError
 
 # Compile regex patterns for routing
 ROUTE_PATTERNS = [
-    # Search must be evaluated BEFORE specific product ID lookup
+    # Categories
+    ("GET", re.compile(r"^/api/categories/?$"), get_categories.handle),
+    ("POST", re.compile(r"^/api/categories/?$"), create_category.handle),
+    ("PATCH", re.compile(r"^/api/categories/(?P<category_id>[^/]+)/?$"), update_category.handle),
+    ("DELETE", re.compile(r"^/api/categories/(?P<category_id>[^/]+)/?$"), delete_category.handle),
+    # Admin
+    ("POST", re.compile(r"^/api/admin/create-admin/?$"), create_admin.handle),
+    
+    # Products
     ("GET", re.compile(r"^/api/products/search/?$"), search_products.handle),
     ("POST", re.compile(r"^/api/products/?$"), create_product.handle),
     ("GET", re.compile(r"^/api/products/?$"), list_products.handle),

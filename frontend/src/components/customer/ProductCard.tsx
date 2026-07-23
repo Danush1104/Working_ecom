@@ -16,6 +16,7 @@ interface ProductCardProps {
   image_url: string;
   category: string;
   is_active: boolean;
+  is_featured?: boolean;
 }
 
 export const ProductCard = React.memo(function ProductCard({ 
@@ -25,6 +26,7 @@ export const ProductCard = React.memo(function ProductCard({
   image_url, 
   category, 
   is_active,
+  is_featured,
 }: ProductCardProps) {
   const addToCartMutation = useAddToCart();
   const { user, isAuthenticated } = useAuth();
@@ -34,6 +36,7 @@ export const ProductCard = React.memo(function ProductCard({
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
     if (!isAuthenticated || !user?.userId) {
       toast.error('Please log in to add items to your cart');
@@ -54,11 +57,12 @@ export const ProductCard = React.memo(function ProductCard({
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (inWishlist) {
       removeFromWishlist(id);
       toast.success('Removed from wishlist');
     } else {
-      addToWishlist({ id, name, price, image: image_url });
+      addToWishlist(id);
       toast.success('Added to wishlist');
     }
   };
@@ -66,10 +70,10 @@ export const ProductCard = React.memo(function ProductCard({
   return (
     <Link to={`/product/${id}`} className="group relative block focus:outline-none rounded-2xl ring-offset-2 focus-visible:ring-2 focus-visible:ring-primary">
       <motion.div 
-        whileHover={{ y: -4 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300"
+        whileHover={{ y: -8 }}
+        className="bg-white dark:bg-bg-card rounded-3xl overflow-hidden border border-gray-100 dark:border-border-subtle shadow-soft hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_0_20px_rgba(21,216,255,0.15)] transition-all duration-300 group-hover:border-primary/30"
       >
-        <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-gray-900">
+        <div className="relative aspect-[4/5] overflow-hidden bg-gray-50 dark:bg-bg-primary">
           <img 
             src={image_url || 'https://via.placeholder.com/400'} 
             alt={name}
@@ -80,6 +84,11 @@ export const ProductCard = React.memo(function ProductCard({
             {!is_active && (
               <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
                 UNAVAILABLE
+              </span>
+            )}
+            {is_featured && (
+              <span className="bg-gradient-to-r from-amber-400 to-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
+                ⭐ Featured
               </span>
             )}
           </div>
@@ -96,11 +105,11 @@ export const ProductCard = React.memo(function ProductCard({
             <Heart className="h-4 w-4" fill={inWishlist ? "currentColor" : "none"} />
           </button>
           
-          <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+          <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 z-20">
             <button 
               onClick={handleAddToCart}
               disabled={addToCartMutation.isPending || !is_active}
-              className="w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-gray-900 dark:text-white hover:bg-primary hover:text-white dark:hover:bg-primary shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-white/90 dark:bg-bg-secondary/90 backdrop-blur-md flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-space font-bold text-gray-900 dark:text-text-primary hover:bg-primary hover:text-bg-primary dark:hover:bg-primary shadow-[0_4px_20px_rgba(0,0,0,0.1)] transition-all focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {addToCartMutation.isPending ? (
                 <span className="flex items-center gap-2">
@@ -113,9 +122,9 @@ export const ProductCard = React.memo(function ProductCard({
           </div>
         </div>
         
-        <div className="p-4">
-          <p className="text-xs font-medium text-primary uppercase tracking-wider mb-1">{category}</p>
-          <h3 className="text-gray-900 dark:text-gray-100 font-semibold mb-1 truncate group-hover:text-primary transition-colors">{name}</h3>
+        <div className="p-5">
+          <p className="text-xs font-space font-medium text-primary uppercase tracking-wider mb-2">{category}</p>
+          <h3 className="text-gray-900 dark:text-text-primary font-playfair font-semibold text-lg mb-2 truncate group-hover:text-primary transition-colors">{name}</h3>
           <PriceTag price={price} />
         </div>
       </motion.div>

@@ -232,6 +232,28 @@ class InventoryService:
                 )
             raise
 
+    def admin_deduct_stock(self, product_id: str, quantity: int) -> Dict[str, Any]:
+        """Atomically deducts total stock without affecting reserved stock."""
+        now = get_utc_timestamp()
+        try:
+            self.repository.admin_deduct_stock(product_id, quantity, now)
+            logger.info(f"Admin deducted stock: product_id={product_id}, quantity={quantity}")
+            
+            updated = self.repository.get_inventory(product_id)
+            return updated.to_dict() if updated else {}
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+                if not self.repository.inventory_exists(product_id):
+                    raise NotFoundError(
+                        f"Inventory record for product {product_id} not found",
+                        ERROR_INVENTORY_NOT_FOUND
+                    )
+                raise ValidationError(
+                    "Cannot deduct stock: stock level cannot drop below currently reserved amount",
+                    ERROR_DEDUCTION_FAILED
+                )
+            raise
+
     def restore_stock(self, product_id: str, quantity: int, event_id: Optional[str] = None) -> Dict[str, Any]:
         """Atomically restores stock level (increases stock)."""
         if event_id and self.repository.is_event_processed(event_id):

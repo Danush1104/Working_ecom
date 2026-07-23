@@ -48,17 +48,23 @@ def get_user_groups(event: Dict[str, Any]) -> list:
 
 def require_admin(event: Dict[str, Any]) -> None:
     groups = get_user_groups(event)
-    if "ADMIN" not in groups:
+    claims = get_user_claims(event)
+    custom_role = str(claims.get("custom:role", "")).upper()
+    if "ADMIN" not in groups and custom_role != "ADMIN":
         raise ForbiddenError("Admin access required")
 
 def require_user_or_admin(event: Dict[str, Any]) -> None:
     groups = get_user_groups(event)
-    if "USER" not in groups and "ADMIN" not in groups:
+    claims = get_user_claims(event)
+    custom_role = str(claims.get("custom:role", "")).upper()
+    if "USER" not in groups and "ADMIN" not in groups and custom_role not in ["USER", "ADMIN"]:
         raise ForbiddenError("User or Admin access required")
 
 def require_self_or_admin(event: Dict[str, Any], target_user_id: str) -> None:
     groups = get_user_groups(event)
-    if "ADMIN" in groups:
+    claims = get_user_claims(event)
+    custom_role = str(claims.get("custom:role", "")).upper()
+    if "ADMIN" in groups or custom_role == "ADMIN":
         return
     user_id = get_user_id(event)
     if user_id != target_user_id:

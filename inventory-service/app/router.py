@@ -9,6 +9,7 @@ from app.handlers import (
     release_stock,
     deduct_stock,
     restore_stock,
+    admin_inventory,
     health
 )
 from app.errors import NotFoundError
@@ -23,6 +24,8 @@ ROUTE_PATTERNS = [
     ("GET", re.compile(r"^/api/inventory/?$"), list_inventory.handle),
     ("GET", re.compile(r"^/api/inventory/(?P<product_id>[^/]+)/?$"), get_inventory.handle),
     ("PATCH", re.compile(r"^/api/inventory/(?P<product_id>[^/]+)/stock/?$"), update_stock.handle),
+    ("PATCH", re.compile(r"^/api/inventory/(?P<product_id>[^/]+)/deduct/?$"), admin_inventory.handle_deduct),
+    ("PATCH", re.compile(r"^/api/inventory/(?P<product_id>[^/]+)/restore/?$"), admin_inventory.handle_restore),
 ]
 
 def route_request(method: str, path: str) -> Tuple[Callable[[Dict[str, Any], Any], Dict[str, Any]], Dict[str, str]]:

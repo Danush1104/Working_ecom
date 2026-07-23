@@ -89,7 +89,7 @@ export default function ForgotPassword() {
           <form onSubmit={reqSubmit(onRequest)} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-              <input
+              <input id="input_sdll" 
                 {...reqRegister('email')}
                 type="email"
                 className="w-full h-11 px-4 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-gray-900 dark:text-white"
@@ -110,7 +110,7 @@ export default function ForgotPassword() {
           <form onSubmit={resSubmit(onReset)} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reset Code</label>
-              <input
+              <input id="input_dmfh" 
                 {...resRegister('code')}
                 type="text"
                 className="w-full h-11 px-4 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-gray-900 dark:text-white text-center tracking-widest uppercase"
@@ -121,7 +121,7 @@ export default function ForgotPassword() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
-              <input
+              <input id="input_bqms" 
                 {...resRegister('newPassword')}
                 type="password"
                 className="w-full h-11 px-4 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-gray-900 dark:text-white"
@@ -132,7 +132,7 @@ export default function ForgotPassword() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
-              <input
+              <input id="input_mvrn" 
                 {...resRegister('confirmPassword')}
                 type="password"
                 className="w-full h-11 px-4 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-gray-900 dark:text-white"

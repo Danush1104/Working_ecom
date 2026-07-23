@@ -15,9 +15,11 @@ const Profile = lazy(() => import('../pages/customer/Profile'));
 const Payment = lazy(() => import('../pages/customer/Payment'));
 const PaymentSuccess = lazy(() => import('../pages/customer/PaymentSuccess'));
 const PlaceholderPage = lazy(() => import('../components/ui/PlaceholderPage'));
+const Settings = lazy(() => import('../pages/customer/Settings'));
 
 const Dashboard = lazy(() => import('../pages/admin/Dashboard'));
 const AdminProducts = lazy(() => import('../pages/admin/Products'));
+const Categories = lazy(() => import('../pages/admin/Categories'));
 const Inventory = lazy(() => import('../pages/admin/Inventory'));
 const Carts = lazy(() => import('../pages/admin/Carts'));
 const Orders = lazy(() => import('../pages/admin/Orders'));
@@ -46,7 +48,7 @@ export const router = createBrowserRouter([
           { path: 'orders', element: <CustomerOrders /> },
           { path: 'payment/:orderId', element: <Payment /> },
           { path: 'payment-success/:orderId/:paymentId', element: <PaymentSuccess /> },
-          { path: 'settings', element: <PlaceholderPage title="Settings" /> },
+          { path: 'settings', element: <Settings /> },
         ],
       },
       {
@@ -59,6 +61,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <Dashboard /> },
               { path: 'products', element: <AdminProducts /> },
+              { path: 'categories', element: <Categories /> },
               { path: 'inventory', element: <Inventory /> },
               { path: 'carts', element: <Carts /> },
               { path: 'orders', element: <Orders /> },

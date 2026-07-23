@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useOrder } from '../../hooks/useOrders';
 import { usePaymentsByOrder, useCreatePayment, useProcessPayment } from '../../hooks/usePayments';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { formatCurrency } from '../../utils/currency';
 
 export default function Payment() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -113,7 +114,7 @@ export default function Payment() {
         <div className="space-y-4 mb-8">
           <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
             <span className="text-gray-600 dark:text-gray-400">Total Amount</span>
-            <span className="font-semibold text-gray-900 dark:text-white">${Number(order.total_amount).toFixed(2)}</span>
+            <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(order.total_amount)}</span>
           </div>
           <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
             <span className="text-gray-600 dark:text-gray-400">Payment Method</span>
@@ -134,7 +135,7 @@ export default function Payment() {
             disabled={processPaymentMutation.isPending || !paymentId}
             className="w-full flex items-center justify-center gap-2 h-14 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50"
           >
-            {processPaymentMutation.isPending ? 'Processing...' : `Pay $${Number(order.total_amount).toFixed(2)}`}
+            {processPaymentMutation.isPending ? 'Processing...' : `Pay ${formatCurrency(order.total_amount)}`}
             {!processPaymentMutation.isPending && <ArrowRight className="h-5 w-5" />}
           </button>
           

@@ -1,22 +1,32 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, Loader2, AlertCircle, Plus } from 'lucide-react';
+import { Loader2, AlertCircle, Plus, Eye } from 'lucide-react';
 import { DataTable } from '../../components/admin/DataTable';
+import { ViewModal } from '../../components/ui/ViewModal';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { UpdateStockModal } from '../../components/admin/UpdateStockModal';
-import { useInventory, useUpdateStock, useCreateInventory } from '../../hooks/useInventory';
+import { useInventory, useCreateInventory, useUpdateStock, useRestoreStock, useDeductStock } from '../../hooks/useInventory';
 import { useProducts } from '../../hooks/useProducts';
+import { FilterBar } from '../../components/admin/FilterBar';
+import { FilterDrawer } from '../../components/admin/FilterDrawer';
+import { Pagination } from '../../components/ui/Pagination';
 
 export default function Inventory() {
   const { data: inventoryData, isLoading: isLoadingInv, isError: isErrorInv } = useInventory();
   const { data: productsData, isLoading: isLoadingProd } = useProducts();
-  const updateStock = useUpdateStock();
   const createInventory = useCreateInventory();
+  const updateStock = useUpdateStock();
+  const restoreStock = useRestoreStock();
+  const deductStock = useDeductStock();
 
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [stockFilter, setStockFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'update' | 'initialize'>('update');
+  const [modalMode, setModalMode] = useState<'initialize' | 'update' | 'restore' | 'deduct'>('update');
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   // Client-side join inventory with product details
   const joinedData = useMemo(() => {
@@ -37,25 +47,52 @@ export default function Inventory() {
       };
     });
 
-    if (!search) return mapped;
-    
-    return mapped.filter(item => 
-      item.name.toLowerCase().includes(search.toLowerCase()) || 
-      item.product_id.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [inventoryData, productsData, search]);
+    return mapped;
+  }, [inventoryData, productsData]);
 
-  const handleUpdateClick = (item: any) => {
-      setSelectedItem(item);
-      setModalMode('update');
-      setIsModalOpen(true);
-    };
+  // Data pipeline: Data -> Filter/Search -> Sort -> Paginate
+  const processedInventory = useMemo(() => {
+    return joinedData.filter((item: any) => {
+      let match = true;
+      if (search) {
+        match = match && (item.name.toLowerCase().includes(search.toLowerCase()) || 
+               item.category.toLowerCase().includes(search.toLowerCase()) ||
+               item.product_id.toLowerCase().includes(search.toLowerCase()));
+      }
+      
+      if (stockFilter !== 'all') {
+        if (!item.has_inventory) return false;
+        const available = item.stock - item.reserved;
+        if (stockFilter === 'in-stock') match = match && available >= 10;
+        else if (stockFilter === 'low-stock') match = match && available > 0 && available < 10;
+        else if (stockFilter === 'out-of-stock') match = match && available === 0;
+      }
+      
+      return match;
+    }).sort((a: any, b: any) => {
+      // Sort by available stock (low stock first if has inventory)
+      if (a.has_inventory && !b.has_inventory) return -1;
+      if (!a.has_inventory && b.has_inventory) return 1;
+      if (a.has_inventory && b.has_inventory) return (a.stock - a.reserved) - (b.stock - b.reserved);
+      return 0;
+    });
+  }, [joinedData, search]);
+
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(processedInventory.length / itemsPerPage);
+  const paginatedInventory = processedInventory.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+  const handleUpdateClick = (item: any, mode: 'update' | 'restore' | 'deduct') => {
+    setSelectedItem(item);
+    setModalMode(mode);
+    setIsModalOpen(true);
+  };
   
-    const handleInitializeClick = (item: any) => {
-      setSelectedItem(item);
-      setModalMode('initialize');
-      setIsModalOpen(true);
-    };
+  const handleInitializeClick = (item: any) => {
+    setSelectedItem(item);
+    setModalMode('initialize');
+    setIsModalOpen(true);
+  };
 
   const handleSaveStock = (newStock: number) => {
     if (selectedItem) {
@@ -64,9 +101,19 @@ export default function Inventory() {
           { product_id: selectedItem.product_id, stock: newStock },
           { onSuccess: () => setIsModalOpen(false) }
         );
-      } else {
+      } else if (modalMode === 'update') {
         updateStock.mutate(
           { productId: selectedItem.product_id, stock: newStock },
+          { onSuccess: () => setIsModalOpen(false) }
+        );
+      } else if (modalMode === 'restore') {
+        restoreStock.mutate(
+          { productId: selectedItem.product_id, quantity: newStock },
+          { onSuccess: () => setIsModalOpen(false) }
+        );
+      } else if (modalMode === 'deduct') {
+        deductStock.mutate(
+          { productId: selectedItem.product_id, quantity: newStock },
           { onSuccess: () => setIsModalOpen(false) }
         );
       }
@@ -101,12 +148,13 @@ export default function Inventory() {
         if (!item.has_inventory) {
           return <span className="text-gray-400 dark:text-gray-500 font-normal text-sm">No inventory record</span>;
         }
+        const available = item.stock - item.reserved;
         return (
           <div className="flex items-center justify-center gap-2">
-            {item.available}
-            {item.available === 0 ? (
+            {available}
+            {available === 0 ? (
               <StatusBadge status="Inactive" /> // Hacky way to show red badge based on our existing component
-            ) : item.available < 10 ? (
+            ) : available < 10 ? (
               <StatusBadge status="Low Stock" />
             ) : null}
           </div>
@@ -119,21 +167,56 @@ export default function Inventory() {
       className: 'text-right',
       accessor: (item: any) => (
         item.has_inventory ? (
-          <button 
-            onClick={() => handleUpdateClick(item)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-          >
-            <RefreshCw className="h-3 w-3" />
-            Update Stock
-          </button>
+          <div className="flex items-center justify-end gap-2">
+            <button 
+              onClick={() => {
+                setSelectedItem(item);
+                setIsViewModalOpen(true);
+              }}
+              className="p-1.5 text-gray-400 hover:text-primary transition-colors"
+              title="View Details"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+            <button 
+              onClick={() => handleUpdateClick(item, 'restore')}
+              className="px-3 py-1.5 text-xs font-medium bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
+            >
+              Restore
+            </button>
+            <button 
+              onClick={() => handleUpdateClick(item, 'deduct')}
+              className="px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+            >
+              Deduct
+            </button>
+            <button 
+              onClick={() => handleUpdateClick(item, 'update')}
+              className="px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            >
+              Set
+            </button>
+          </div>
         ) : (
-          <button 
-            onClick={() => handleInitializeClick(item)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
-          >
-            <Plus className="h-3 w-3" />
-            Initialize
-          </button>
+          <div className="flex items-center justify-end gap-2">
+            <button 
+              onClick={() => {
+                setSelectedItem(item);
+                setIsViewModalOpen(true);
+              }}
+              className="p-1.5 text-gray-400 hover:text-primary transition-colors"
+              title="View Details"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+            <button 
+              onClick={() => handleInitializeClick(item)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+            >
+              <Plus className="h-3 w-3" />
+              Initialize
+            </button>
+          </div>
         )
       )
     }
@@ -146,14 +229,32 @@ export default function Inventory() {
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <input 
-          type="text" 
-          placeholder="Search inventory by product name or ID..." 
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg dark:bg-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+        <FilterBar 
+          placeholder="Search by product name, ID or category..." 
+          onSearch={(val) => { setSearch(val); setPage(1); }} 
+          onFilterClick={() => setIsFilterOpen(true)}
         />
       </div>
+
+      <FilterDrawer
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onReset={() => setStockFilter('all')}
+      >
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stock Level</label>
+          <select
+            value={stockFilter}
+            onChange={(e) => setStockFilter(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-2 outline-none focus:ring-1 focus:ring-primary dark:text-white"
+          >
+            <option value="all">All Levels</option>
+            <option value="in-stock">In Stock (10+)</option>
+            <option value="low-stock">Low Stock (1-9)</option>
+            <option value="out-of-stock">Out of Stock (0)</option>
+          </select>
+        </div>
+      </FilterDrawer>
 
       {isLoadingInv || isLoadingProd ? (
         <div className="flex items-center justify-center py-20">
@@ -168,11 +269,22 @@ export default function Inventory() {
           </div>
         </div>
       ) : (
-        <DataTable 
-          columns={columns} 
-          data={joinedData} 
-          keyExtractor={(item) => item.id} 
-        />
+        <>
+          <DataTable 
+            columns={columns} 
+            data={paginatedInventory} 
+            keyExtractor={(item) => item.product_id} 
+          />
+          {totalPages > 1 && (
+            <div className="mt-6 flex justify-end">
+              <Pagination 
+                currentPage={page} 
+                totalPages={totalPages} 
+                onPageChange={setPage} 
+              />
+            </div>
+          )}
+        </>
       )}
 
       <UpdateStockModal 
@@ -183,6 +295,22 @@ export default function Inventory() {
         currentStock={selectedItem?.stock}
         isLoading={modalMode === 'initialize' ? createInventory.isPending : updateStock.isPending}
         mode={modalMode}
+      />
+
+      <ViewModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        title="Inventory Details"
+        fields={selectedItem ? [
+          { label: 'Product ID', value: selectedItem.product_id },
+          { label: 'Product Name', value: selectedItem.name },
+          { label: 'Category', value: selectedItem.category },
+          { label: 'Has Inventory Record', value: selectedItem.has_inventory ? 'Yes' : 'No' },
+          { label: 'Total Stock', value: selectedItem.stock },
+          { label: 'Reserved Stock', value: selectedItem.reserved },
+          { label: 'Available Stock', value: selectedItem.available },
+          { label: 'Last Updated', value: selectedItem.lastUpdated !== 'N/A' && selectedItem.lastUpdated !== 'Just now' ? new Date(selectedItem.lastUpdated).toLocaleString() : selectedItem.lastUpdated }
+        ] : []}
       />
     </motion.div>
   );

@@ -99,12 +99,7 @@ export default function ProductDetails() {
       removeFromWishlist(product.id);
       toast.success('Removed from wishlist');
     } else {
-      addToWishlist({ 
-        id: product.id, 
-        name: product.name, 
-        price: product.price, 
-        image: product.image_url 
-      });
+      addToWishlist(product.id);
       toast.success('Added to wishlist');
     }
   };
@@ -124,7 +119,8 @@ export default function ProductDetails() {
 
       <div className="grid md:grid-cols-2 gap-12 items-start">
         {/* Image Gallery */}
-        <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-700 group cursor-pointer shadow-sm hover:shadow-md transition-shadow duration-300">
+        <div className="aspect-[4/5] bg-gray-50 dark:bg-bg-card rounded-[32px] overflow-hidden border border-gray-100 dark:border-border-subtle group cursor-pointer shadow-soft hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] transition-all duration-500 relative">
+          <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/20 to-transparent z-10" />
           <img 
             src={product.image_url || 'https://via.placeholder.com/600'} 
             alt={product.name}
@@ -135,8 +131,8 @@ export default function ProductDetails() {
         {/* Details */}
         <div className="space-y-8">
           <div>
-            <p className="text-sm font-medium text-primary uppercase tracking-wide mb-2">{product.category}</p>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight mb-4">{product.name}</h1>
+            <p className="text-sm font-space font-bold text-primary uppercase tracking-wider mb-3">{product.category}</p>
+            <h1 className="text-4xl md:text-5xl font-playfair font-bold text-gray-900 dark:text-text-primary tracking-tight mb-6 leading-tight">{product.name}</h1>
             <div className="flex items-center gap-4 mb-6">
               <PriceTag price={product.price} size="lg" />
               
@@ -164,12 +160,12 @@ export default function ProductDetails() {
                 </span>
               )}
             </div>
-            <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">
+            <p className="text-gray-600 dark:text-text-secondary leading-relaxed text-lg font-space max-w-xl">
               {product.description}
             </p>
           </div>
 
-          <div className="py-6 border-y border-gray-100 dark:border-gray-800 space-y-6">
+          <div className="py-8 border-y border-gray-100 dark:border-border-subtle space-y-8">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-gray-900 dark:text-gray-200">Quantity</span>
               <QuantitySelector 
@@ -183,7 +179,7 @@ export default function ProductDetails() {
               <button 
                 onClick={handleAddToCart}
                 disabled={addToCartMutation.isPending || !product.is_active || isOutOfStock || !hasInventoryRecord || isErrorInv || isLoadingInv}
-                className="flex-1 flex items-center justify-center gap-2 bg-primary text-white h-14 rounded-xl font-semibold hover:bg-primary-hover active:scale-[0.98] transition-all shadow-soft disabled:opacity-50 disabled:active:scale-100 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                className="flex-1 flex items-center justify-center gap-2 py-4 bg-primary text-bg-primary rounded-xl font-space font-bold uppercase tracking-wider hover:bg-primary-hover hover:scale-[1.02] transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900 shadow-[0_4px_20px_rgba(21,216,255,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {addToCartMutation.isPending ? (
                   <>
@@ -212,7 +208,7 @@ export default function ProductDetails() {
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
               <Truck className="h-5 w-5 text-gray-400 dark:text-gray-500 dark:text-gray-400 shrink-0" />
-              <span>Free shipping on orders over $50</span>
+              <span>Free shipping on orders over ₹2,500</span>
             </div>
             <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
               <ShieldCheck className="h-5 w-5 text-gray-400 dark:text-gray-500 dark:text-gray-400 shrink-0" />

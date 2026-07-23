@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Edit2, Trash2, Loader2, Power } from 'lucide-react';
+import { Edit2, Trash2, Loader2, Power, Eye } from 'lucide-react';
 import { DataTable } from '../../components/admin/DataTable';
 import { FilterBar } from '../../components/admin/FilterBar';
+import { FilterDrawer } from '../../components/admin/FilterDrawer';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { ProductModal } from '../../components/admin/ProductModal';
 import type { ProductFormData } from '../../components/admin/ProductModal';
+import { ViewModal } from '../../components/ui/ViewModal';
 import { DeleteDialog } from '../../components/admin/DeleteDialog';
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, usePatchProduct } from '../../hooks/useProducts';
 import type { Product } from '../../api/productService';
+import { formatCurrency } from '../../utils/currency';
+import { Pagination } from '../../components/ui/Pagination';
 
 export default function Products() {
   const { data: products, isLoading, isError } = useProducts();
@@ -18,8 +22,31 @@ export default function Products() {
   const patchProduct = usePatchProduct();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const itemsPerPage = 10;
+
+  // Data pipeline: Filter -> Search -> Sort -> Paginate
+  const processedProducts = Array.isArray(products) ? products.filter(p => {
+    let match = true;
+    if (search) {
+      match = match && (p.name.toLowerCase().includes(search.toLowerCase()) || 
+             p.category.toLowerCase().includes(search.toLowerCase()));
+    }
+    if (statusFilter !== 'all') {
+      match = match && p.is_active === (statusFilter === 'active');
+    }
+    return match;
+  }).sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()) : [];
+
+  const totalPages = Math.ceil(processedProducts.length / itemsPerPage);
+  const paginatedProducts = processedProducts.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   const handleAdd = () => {
     setSelectedProduct(null);
@@ -75,7 +102,7 @@ export default function Products() {
     { header: 'Category', accessor: 'category' },
     { 
       header: 'Price', 
-      accessor: (item: Product) => `$${Number(item.price).toFixed(2)}` 
+      accessor: (item: Product) => formatCurrency(item.price)
     },
     { 
       header: 'Status', 
@@ -87,16 +114,26 @@ export default function Products() {
       accessor: (item: Product) => (
         <div className="flex items-center justify-end gap-2">
           <button 
+            onClick={() => {
+              setSelectedProduct(item);
+              setIsViewModalOpen(true);
+            }} 
+            className="p-1.5 text-gray-400 hover:text-primary transition-colors"
+            title="View Details"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button 
             onClick={() => handleToggleActive(item)} 
             className={`p-1.5 transition-colors ${item.is_active ? 'text-green-500 hover:text-green-600' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
             title={item.is_active ? 'Deactivate' : 'Activate'}
           >
             <Power className="h-4 w-4" />
           </button>
-          <button onClick={() => handleEdit(item)} className="p-1.5 text-gray-400 hover:text-primary transition-colors">
+          <button onClick={() => handleEdit(item)} className="p-1.5 text-gray-400 hover:text-primary transition-colors" title="Edit">
             <Edit2 className="h-4 w-4" />
           </button>
-          <button onClick={() => handleDeleteClick(item)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+          <button onClick={() => handleDeleteClick(item)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -112,9 +149,30 @@ export default function Products() {
 
       <FilterBar 
         placeholder="Search products..." 
+        onSearch={(val) => { setSearch(val); setPage(1); }}
+        onFilterClick={() => setIsFilterOpen(true)}
         onAdd={handleAdd} 
         addLabel="Add Product" 
       />
+
+      <FilterDrawer
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onReset={() => setStatusFilter('all')}
+      >
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-2 outline-none focus:ring-1 focus:ring-primary dark:text-white"
+          >
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </FilterDrawer>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
@@ -125,14 +183,26 @@ export default function Products() {
           <p className="text-red-500 font-medium">Failed to load products. Please check the backend connection.</p>
         </div>
       ) : (
-        <DataTable 
-          columns={columns} 
-          data={Array.isArray(products) ? products : []} 
-          keyExtractor={(item) => item.id} 
-        />
+        <>
+          <DataTable 
+            columns={columns} 
+            data={paginatedProducts} 
+            keyExtractor={(item) => item.id} 
+          />
+          
+          {totalPages > 1 && (
+            <div className="mt-6 flex justify-end">
+              <Pagination 
+                currentPage={page} 
+                totalPages={totalPages} 
+                onPageChange={setPage} 
+              />
+            </div>
+          )}
+        </>
       )}
 
-      <ProductModal 
+      <ProductModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
@@ -140,10 +210,28 @@ export default function Products() {
           ...selectedProduct,
           price: selectedProduct.price.toString()
         } : null}
-        title={selectedProduct ? "Edit Product" : "Add Product"}
+        title={selectedProduct ? 'Edit Product' : 'Add Product'}
       />
 
-      <DeleteDialog 
+      <ViewModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        title="Product Details"
+        fields={selectedProduct ? [
+          { label: 'Image', value: <img src={selectedProduct.image_url} alt="Product" className="w-32 h-32 rounded-lg object-cover" />, fullWidth: true },
+          { label: 'ID', value: selectedProduct.id },
+          { label: 'Name', value: selectedProduct.name },
+          { label: 'Description', value: selectedProduct.description, fullWidth: true },
+          { label: 'Category', value: selectedProduct.category },
+          { label: 'Price', value: formatCurrency(selectedProduct.price) },
+          { label: 'Status', value: selectedProduct.is_active ? 'Active' : 'Inactive' },
+          { label: 'Featured', value: selectedProduct.is_featured ? 'Yes' : 'No' },
+          { label: 'Created At', value: new Date(selectedProduct.created_at || '').toLocaleString() },
+          { label: 'Updated At', value: new Date(selectedProduct.updated_at || '').toLocaleString() }
+        ] : []}
+      />
+
+      <DeleteDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDelete}

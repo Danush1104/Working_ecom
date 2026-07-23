@@ -14,6 +14,9 @@ class IdempotencyRepository:
             response = self.table.get_item(Key={"event_id": event_id})
             return "Item" in response
         except ClientError as e:
+            if e.response["Error"]["Code"] == "ResourceNotFoundException":
+                logger.warning("Processed events table not found. Skipping idempotency check.")
+                return False
             logger.error(f"Failed to get item from idempotency table: {str(e)}")
             raise InternalServerError(f"Database error during idempotency get: {str(e)}")
             
@@ -34,7 +37,11 @@ class IdempotencyRepository:
             )
             return True
         except ClientError as e:
-            if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            error_code = e.response["Error"]["Code"]
+            if error_code == "ConditionalCheckFailedException":
                 return False
+            if error_code == "ResourceNotFoundException":
+                logger.warning("Processed events table not found. Skipping idempotency mark.")
+                return True
             logger.error(f"Failed to write to idempotency table: {str(e)}")
             raise InternalServerError(f"Database error during idempotency write: {str(e)}")

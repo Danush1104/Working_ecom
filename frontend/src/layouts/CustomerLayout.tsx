@@ -59,13 +59,13 @@ export default function CustomerLayout() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-bg-primary flex flex-col transition-colors duration-200">
       <ScrollToTop />
       {/* Desktop Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800/80 dark:bg-gray-900/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-border-subtle bg-white/80 dark:bg-bg-primary/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-8">
-            <Link to="/" className="text-xl font-bold tracking-tight text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary rounded-lg">
+            <Link to="/" className="text-2xl font-playfair font-bold tracking-tight text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary rounded-lg">
               STOREFRONT
             </Link>
             <nav className="hidden md:flex gap-6">
@@ -81,7 +81,7 @@ export default function CustomerLayout() {
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input 
+              <input id="input_eyrm"  
                 type="text" 
                 placeholder="Search products..."
                 onChange={(e) => {
@@ -199,7 +199,7 @@ export default function CustomerLayout() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[100] border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800/90 dark:bg-gray-900/90 backdrop-blur-md pb-safe">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[100] border-t border-gray-200 dark:border-border-subtle bg-white/90 dark:bg-bg-primary/90 backdrop-blur-md pb-safe">
         <div className="flex h-16 items-center justify-around px-2">
           <Link to="/" className="flex flex-col items-center gap-1 p-2 w-16 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-xl">
             <Home className="h-5 w-5" />

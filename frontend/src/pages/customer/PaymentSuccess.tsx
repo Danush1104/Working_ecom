@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useOrder } from '../../hooks/useOrders';
 import { usePayment } from '../../hooks/usePayments';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { formatCurrency } from '../../utils/currency';
 
 export default function PaymentSuccess() {
   const { orderId, paymentId } = useParams<{ orderId: string, paymentId: string }>();
@@ -70,15 +71,15 @@ export default function PaymentSuccess() {
       </div>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Payment Successful!</h1>
       <p className="text-gray-600 dark:text-gray-400 mb-8">
-        Thank you for your purchase. Your payment of ${Number(payment.amount).toFixed(2)} was received and your order is now being processed.
+        Thank you for your purchase. Your payment of {formatCurrency(payment.amount)} was received and your order is now being processed.
       </p>
       
-      <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-6 rounded-2xl max-w-md mx-auto mb-8 text-left space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 border-b border-gray-100 dark:border-gray-700 pb-3">
+      <div className="bg-white dark:bg-bg-card border border-gray-100 dark:border-border-subtle p-8 rounded-[32px] shadow-soft max-w-md mx-auto mb-8 text-left space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 border-b border-gray-100 dark:border-border-subtle pb-3">
           <span className="text-gray-500 dark:text-gray-400">Order ID:</span>
           <span className="font-medium text-gray-900 dark:text-white sm:col-span-2 break-all">{order.order_id}</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 border-b border-gray-100 dark:border-gray-700 pb-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 border-b border-gray-100 dark:border-border-subtle pb-3">
           <span className="text-gray-500 dark:text-gray-400">Payment ID:</span>
           <span className="font-medium text-gray-900 dark:text-white sm:col-span-2 break-all">{payment.payment_id}</span>
         </div>

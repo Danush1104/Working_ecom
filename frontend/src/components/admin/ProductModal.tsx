@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { useCategories } from '../../hooks/useCategories';
+
 export interface ProductFormData {
   name: string;
   description: string;
@@ -9,6 +11,7 @@ export interface ProductFormData {
   price: string;
   image_url: string;
   is_active: boolean;
+  is_featured?: boolean;
 }
 
 interface ProductModalProps {
@@ -20,29 +23,38 @@ interface ProductModalProps {
 }
 
 export function ProductModal({ isOpen, onClose, onSave, initialData, title = "Add Product" }: ProductModalProps) {
+  const { data: categoriesData } = useCategories();
+  const categories = categoriesData || [];
+  
+  const defaultCategory = categories.length > 0 ? categories[0].name : '';
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
-    category: 'Electronics',
+    category: '',
     price: '',
     image_url: '',
     is_active: true,
+    is_featured: false,
   });
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({
+        ...initialData,
+        is_featured: initialData.is_featured ?? false,
+      });
     } else {
       setFormData({
         name: '',
         description: '',
-        category: 'Electronics',
+        category: defaultCategory,
         price: '',
         image_url: '',
         is_active: true,
+        is_featured: false,
       });
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, defaultCategory]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,17 +127,15 @@ export function ProductModal({ isOpen, onClose, onSave, initialData, title = "Ad
                         onChange={e => setFormData({...formData, category: e.target.value})}
                         className="w-full h-11 px-4 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white dark:bg-gray-900 dark:text-white"
                       >
-                        <option>Electronics</option>
-                        <option>Accessories</option>
-                        <option>Wearables</option>
-                        <option>Fashion</option>
-                        <option>Home</option>
+                        {(Array.isArray(categories) ? categories : []).map(c => (
+                          <option key={c.id} value={c.name}>{c.name}</option>
+                        ))}
                       </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price</label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">₹</span>
                         <input 
                           required
                           type="number" 
@@ -151,20 +161,38 @@ export function ProductModal({ isOpen, onClose, onSave, initialData, title = "Ad
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">Active Status</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Determine if product is visible to customers.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">Active Status</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Determine if product is visible to customers.</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer" 
+                          checked={formData.is_active}
+                          onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-gray-800 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        className="sr-only peer" 
-                        checked={formData.is_active}
-                        onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-gray-800 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                    </label>
+
+                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">Featured Product</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Featured on Homepage.</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer" 
+                          checked={formData.is_featured}
+                          onChange={(e) => setFormData({...formData, is_featured: e.target.checked})}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-gray-800 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>

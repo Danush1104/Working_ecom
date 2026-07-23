@@ -13,6 +13,7 @@ class Product:
     created_at: str
     updated_at: str
     image_url: Optional[str] = None
+    is_featured: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         """Converts the Product instance to a dictionary for DynamoDB storage."""
@@ -37,5 +38,6 @@ class Product:
             is_active=bool(data.get("is_active", True)),
             created_at=data["created_at"],
             updated_at=data["updated_at"],
-            image_url=data.get("image_url")
+            image_url=data.get("image_url"),
+            is_featured=bool(data.get("is_featured", False))
         )

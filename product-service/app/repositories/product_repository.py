@@ -47,7 +47,7 @@ class ProductRepository:
                 ExpressionAttributeValues={":active": True}
             )
             items = response.get("Items", [])
-            return [Product.from_dict(item) for item in items]
+            return [Product.from_dict(item) for item in items if item.get("entity_type") != "CATEGORY"]
         except ClientError as e:
             logger.error(f"Failed to list products from DynamoDB: {str(e)}")
             raise DatabaseError(f"Database error during product listing: {str(e)}")
@@ -171,7 +171,7 @@ class ProductRepository:
                 response = self.table.scan(**scan_kwargs)
 
             items = response.get("Items", [])
-            return [Product.from_dict(item) for item in items]
+            return [Product.from_dict(item) for item in items if item.get("entity_type") != "CATEGORY"]
 
         except ClientError as e:
             logger.error(f"Failed to search products in DynamoDB: {str(e)}")

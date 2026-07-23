@@ -116,10 +116,10 @@ export default function Products() {
         
         {/* Mobile Filter Toggle */}
         <div className="md:hidden flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">All Products</h1>
+          <h1 className="text-3xl font-playfair font-bold text-gray-900 dark:text-white">All Products</h1>
           <button 
             onClick={() => setShowMobileFilters(!showMobileFilters)}
-            className="flex items-center gap-2 p-2 bg-white dark:bg-gray-800 border rounded-lg shadow-sm"
+            className="flex items-center gap-2 p-2 bg-white dark:bg-bg-card border border-gray-100 dark:border-border-subtle rounded-lg shadow-soft"
           >
             <Filter className="h-4 w-4" />
             <span className="text-sm font-medium">Filters</span>
@@ -129,14 +129,14 @@ export default function Products() {
         {/* Sidebar Filters (Desktop & Mobile if toggled) */}
         <aside className={`md:w-64 shrink-0 space-y-8 ${showMobileFilters ? 'block' : 'hidden md:block'}`}>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-playfair font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <SlidersHorizontal className="h-5 w-5" />
               Categories
             </h3>
             <div className="space-y-3">
               {categories.map((category) => (
                 <label key={category} className="flex items-center gap-3 cursor-pointer group">
-                  <input 
+                  <input id="input_wdlk"  
                     type="checkbox" 
                     checked={selectedCategories.includes(category)}
                     onChange={() => toggleCategory(category)}
@@ -151,7 +151,7 @@ export default function Products() {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Price Range</h3>
+            <h3 className="text-lg font-playfair font-semibold text-gray-900 dark:text-white mb-4">Price Range</h3>
             <div className="space-y-6">
               <DualRangeSlider 
                 min={0}
@@ -167,20 +167,20 @@ export default function Products() {
                 }}
               />
               <div className="flex items-center gap-2">
-                <input 
+                <input id="input_uuel"  
                   type="number" 
                   placeholder="Min" 
                   value={minPrice}
                   onChange={(e) => { setMinPrice(e.target.value ? Number(e.target.value) : ''); setPage(1); }}
-                  className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 outline-none focus:border-primary" 
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white dark:bg-bg-card dark:text-white dark:border-border-subtle outline-none focus:border-primary" 
                 />
                 <span className="text-gray-500 dark:text-gray-400">-</span>
-                <input 
+                <input id="input_pjxx"  
                   type="number" 
                   placeholder="Max" 
                   value={maxPrice}
                   onChange={(e) => { setMaxPrice(e.target.value ? Number(e.target.value) : ''); setPage(1); }}
-                  className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 outline-none focus:border-primary" 
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white dark:bg-bg-card dark:text-white dark:border-border-subtle outline-none focus:border-primary" 
                 />
               </div>
             </div>
@@ -190,22 +190,22 @@ export default function Products() {
         {/* Main Product Grid */}
         <div className="flex-1 space-y-6">
           <div className="hidden md:flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white shrink-0">All Products</h1>
+            <h1 className="text-3xl font-playfair font-bold text-gray-900 dark:text-white">All Products</h1>
             
             <div className="flex-1 max-w-md ml-auto flex items-center gap-4">
-              <input 
+              <input id="input_ujfd"  
                 type="text" 
                 placeholder="Search products..." 
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full h-11 px-4 rounded-full border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-gray-800 dark:text-white placeholder:text-gray-400"
+                className="w-full h-11 px-6 rounded-full border border-gray-200 dark:border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-bg-card dark:text-white placeholder:text-gray-400 shadow-soft"
               />
               
               <div className="relative shrink-0 group">
-                <select 
+                <select id="select_xffe"  
                   value={sortBy}
                   onChange={(e) => { setSortBy(e.target.value as SortOption); setPage(1); }}
-                  className="appearance-none h-11 pl-4 pr-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-bg-card border border-gray-200 dark:border-border-subtle rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:text-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   <option value="newest">Newest</option>
                   <option value="price-asc">Price: Low to High</option>

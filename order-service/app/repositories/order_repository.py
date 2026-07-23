@@ -92,6 +92,9 @@ class OrderRepository:
             )
             return "Item" in response
         except ClientError as e:
+            if e.response["Error"]["Code"] == "ResourceNotFoundException":
+                logger.warning("Processed events table not found. Skipping idempotency check.")
+                return False
             logger.error(f"Failed to query processed event from DynamoDB: {str(e)}")
             raise DatabaseError(f"Database error reading processed events: {str(e)}")
 
@@ -108,9 +111,13 @@ class OrderRepository:
                 ConditionExpression="attribute_not_exists(event_id)"
             )
         except ClientError as e:
-            if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            error_code = e.response["Error"]["Code"]
+            if error_code == "ConditionalCheckFailedException":
                 # Another concurrent request already marked this event processed — safe to ignore
                 logger.warning(f"Event {event_id} already marked processed (concurrent write). Ignoring.")
+                return
+            if error_code == "ResourceNotFoundException":
+                logger.warning("Processed events table not found. Skipping idempotency mark.")
                 return
             logger.error(f"Failed to save processed event ID to DynamoDB: {str(e)}")
             raise DatabaseError(f"Database error saving processed event: {str(e)}")

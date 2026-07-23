@@ -6,6 +6,9 @@ import { useOrders } from '../../hooks/useOrders';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { StatusBadge } from '../../components/admin/StatusBadge';
+import { formatCurrency } from '../../utils/currency';
+import { safeFormatDate } from '../../utils/date';
+import { shortOrderId } from './Orders';
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -31,7 +34,7 @@ export default function Profile() {
         
         {/* Sidebar */}
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-soft border border-gray-100 dark:border-gray-700 text-center relative">
+          <div className="bg-white dark:bg-bg-card p-6 rounded-[32px] shadow-soft border border-gray-100 dark:border-border-subtle text-center relative">
             <button className="absolute top-4 right-4 p-2 text-gray-400 hover:text-primary transition-colors">
               <Edit2 className="h-4 w-4" />
             </button>
@@ -42,27 +45,30 @@ export default function Profile() {
             <p className="text-gray-500 dark:text-gray-400 text-sm">{user?.email || user?.username}</p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-soft border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-bg-card rounded-[32px] shadow-soft border border-gray-100 dark:border-border-subtle overflow-hidden">
             <div className="p-2">
               <Link to="/account" className="flex items-center gap-3 p-3 rounded-2xl bg-primary/5 text-primary font-medium">
                 <User className="h-5 w-5" />
                 Profile Overview
               </Link>
-              <Link to="/orders" className="flex items-center gap-3 p-3 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 hover:text-gray-900 dark:hover:text-white dark:text-white transition-colors">
+              <Link to="/orders" className="flex items-center gap-3 p-3 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-bg-secondary hover:text-gray-900 dark:hover:text-white transition-colors">
                 <Package className="h-5 w-5" />
                 My Orders
               </Link>
-              <Link to="/wishlist" className="flex items-center gap-3 p-3 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 hover:text-gray-900 dark:hover:text-white dark:text-white transition-colors">
+              <Link to="/wishlist" className="flex items-center gap-3 p-3 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-bg-secondary hover:text-gray-900 dark:hover:text-white transition-colors">
                 <Heart className="h-5 w-5" />
                 Wishlist
               </Link>
-              <Link to="/settings" className="flex items-center gap-3 p-3 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 hover:text-gray-900 dark:hover:text-white dark:text-white transition-colors">
+              <Link to="/settings" className="flex items-center gap-3 p-3 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-bg-secondary hover:text-gray-900 dark:hover:text-white transition-colors">
                 <Settings className="h-5 w-5" />
                 Settings
               </Link>
             </div>
             <div className="p-2 border-t border-gray-100 dark:border-gray-700">
-              <button onClick={handleLogout} className="w-full flex items-center gap-3 p-3 rounded-2xl text-red-500 hover:bg-red-50 transition-colors">
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              >
                 <LogOut className="h-5 w-5" />
                 Log out
               </button>
@@ -70,9 +76,10 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="md:col-span-2 space-y-8">
-          <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-soft border border-gray-100 dark:border-gray-700">
+          
+          {/* Recent Orders */}
+          <div className="bg-white dark:bg-bg-card rounded-[32px] p-8 shadow-soft border border-gray-100 dark:border-border-subtle">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Package className="h-6 w-6 text-primary" />
@@ -110,20 +117,29 @@ export default function Profile() {
                 </div>
               ) : (
                 recentOrders.map(order => (
-                  <Link key={order.order_id} to="/orders" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 hover:shadow-sm transition-all group block">
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Order {order.order_id}</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{new Date(order.created_at).toLocaleDateString()}</p>
+                  <div 
+                    key={order.order_id} 
+                    className="flex items-center justify-between p-4 rounded-2xl border border-gray-100 dark:border-border-subtle hover:border-primary/30 hover:shadow-[0_8px_30px_rgba(21,216,255,0.08)] transition-all cursor-pointer"
+                    onClick={() => navigate('/orders')}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-bg-secondary flex items-center justify-center text-primary">
+                        <Package className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Order {shortOrderId(order.order_id)}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{safeFormatDate(order.created_at, { year: 'numeric', month: 'numeric', day: 'numeric' })}</p>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-2/3">
-                      <span className="font-medium text-gray-900 dark:text-white">${Number(order.total_amount).toFixed(2)}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(order.total_amount)}</span>
                       <div className="flex flex-col gap-1 items-end">
                         <StatusBadge status={order.order_status} />
                         <span className="text-xs text-gray-500 dark:text-gray-400">Pay: {order.payment_status}</span>
                       </div>
                       <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-primary transition-colors hidden sm:block" />
                     </div>
-                  </Link>
+                  </div>
                 ))
               )}
             </div>

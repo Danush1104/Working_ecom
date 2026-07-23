@@ -3,11 +3,12 @@ import { Filter, Search, Plus } from 'lucide-react';
 interface FilterBarProps {
   placeholder?: string;
   onSearch?: (val: string) => void;
+  onFilterClick?: () => void;
   onAdd?: () => void;
   addLabel?: string;
 }
 
-export function FilterBar({ placeholder = "Search...", onSearch, onAdd, addLabel = "Add New" }: FilterBarProps) {
+export function FilterBar({ placeholder = "Search...", onSearch, onFilterClick, onAdd, addLabel = "Add New" }: FilterBarProps) {
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
       <div className="relative w-full sm:w-96 flex-1">
@@ -20,7 +21,10 @@ export function FilterBar({ placeholder = "Search...", onSearch, onAdd, addLabel
         />
       </div>
       <div className="flex w-full sm:w-auto items-center gap-3">
-        <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors text-sm font-medium">
+        <button 
+          onClick={onFilterClick}
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors text-sm font-medium"
+        >
           <Filter className="h-4 w-4" />
           Filter
         </button>

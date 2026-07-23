@@ -9,11 +9,25 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        playfair: ['Playfair Display', 'serif'],
+        space: ['Space Grotesk', 'sans-serif'],
       },
       colors: {
         primary: {
-          DEFAULT: '#3b82f6', // blue-500
-          hover: '#2563eb',   // blue-600
+          DEFAULT: '#15D8FF',
+          hover: '#4F8CFF',
+        },
+        bg: {
+          primary: '#090B12',
+          secondary: '#111827',
+          card: '#151A25',
+        },
+        text: {
+          primary: '#FFFFFF',
+          secondary: '#B8C1D1',
+        },
+        border: {
+          subtle: 'rgba(255,255,255,0.08)',
         },
         gray: {
           50: '#f9fafb',

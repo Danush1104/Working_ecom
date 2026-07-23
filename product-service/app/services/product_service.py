@@ -41,7 +41,8 @@ class ProductService:
             is_active=True,
             created_at=now,
             updated_at=now,
-            image_url=data.get("image_url")
+            image_url=data.get("image_url"),
+            is_featured=bool(data.get("is_featured", False))
         )
 
         try:
@@ -87,6 +88,8 @@ class ProductService:
         }
         if "image_url" in data:
             update_fields["image_url"] = data["image_url"]
+        if "is_featured" in data:
+            update_fields["is_featured"] = bool(data["is_featured"])
 
         try:
             self.repository.update_product(product_id, update_fields)
@@ -121,6 +124,8 @@ class ProductService:
             update_fields["price"] = Decimal(str(data["price"]))
         if "image_url" in data:
             update_fields["image_url"] = data["image_url"]
+        if "is_featured" in data:
+            update_fields["is_featured"] = bool(data["is_featured"])
 
         try:
             self.repository.update_product(product_id, update_fields)

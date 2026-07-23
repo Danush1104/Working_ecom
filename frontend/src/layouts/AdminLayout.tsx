@@ -75,6 +75,7 @@ export default function AdminLayout() {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Products', href: '/admin/products', icon: Package },
+    { name: 'Categories', href: '/admin/categories', icon: Package },
     { name: 'Inventory', href: '/admin/inventory', icon: Package },
     { name: 'Carts', href: '/admin/carts', icon: ShoppingCart },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },

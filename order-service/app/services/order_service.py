@@ -112,32 +112,9 @@ class OrderService:
         self.repository.save_order(order)
         logger.info(f"Order created successfully: user_id={user_id}, order_id={order_id}")
 
-        # 7. Clear cart WITHOUT releasing stock (reservation must remain intact for payment).
-        #    Improvement 7: retry once on failure before falling back to warning-only.
-        #    Checkout must never fail after order creation — cart clear is best-effort.
-        clear_cart_url = f"{Config.CART_SERVICE_URL.replace('/api/cart', '')}/internal/cart/{user_id}?releaseInventory=false"
-        cart_cleared = False
-        for attempt in range(1, 3):  # two attempts total
-            try:
-                logger.info(f"Clearing cart for user {user_id} without releasing stock (attempt {attempt})...")
-                secret = os.getenv("INTERNAL_WEBHOOK_SECRET", "default-internal-secret-123")
-                HttpClient.request("DELETE", clear_cart_url, headers={"x-internal-secret": secret}, timeout=3.0)
-                cart_cleared = True
-                break
-            except Exception as e:
-                logger.warning(
-                    f"Cart clear attempt {attempt} failed for user {user_id}: {str(e)}. "
-                    f"{'Retrying in 500ms...' if attempt == 1 else 'Giving up \u2014 cart items may still appear but order is saved.'}"
-                )
-                if attempt == 1:
-                    time.sleep(0.5)
-
-        if not cart_cleared:
-            logger.warning(
-                f"Cart for user {user_id} could not be cleared after 2 attempts. "
-                f"Order {order_id} is valid. Cart will appear stale until next action on it."
-            )
-
+        # 7. Cart clearing removed from checkout.
+        #    Cart will be cleared asynchronously by the webhook after successful payment.
+        
         return order.to_dict()
 
     def get_user_orders(self, user_id: str) -> List[Dict[str, Any]]:
@@ -289,6 +266,15 @@ class OrderService:
                     except Exception as e:
                         logger.error(f"Failed to deduct stock for product {item.product_id}: {str(e)}")
                         raise InternalServerError(f"Failed to deduct inventory stock: {str(e)}")
+
+                # Clear the user's cart without releasing stock
+                clear_cart_url = f"{Config.CART_SERVICE_URL.replace('/api/cart', '')}/internal/cart/{user_id}?releaseInventory=false"
+                try:
+                    logger.info(f"Clearing cart for user {user_id} upon successful payment...")
+                    secret = os.getenv("INTERNAL_WEBHOOK_SECRET", "default-internal-secret-123")
+                    HttpClient.request("DELETE", clear_cart_url, headers={"x-internal-secret": secret}, timeout=3.0)
+                except Exception as e:
+                    logger.warning(f"Failed to clear cart for user {user_id} upon successful payment: {str(e)}")
 
                 # Record idempotency key AFTER all deductions succeed.
                 # This ensures: if deduction fails, no key is written, so the next retry

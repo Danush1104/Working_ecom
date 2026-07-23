@@ -43,7 +43,7 @@ export function DualRangeSlider({ min, max, value, onChange }: DualRangeSliderPr
 
   return (
     <div className="relative w-full flex items-center h-5">
-      <input
+      <input id="input_stay" 
         type="range"
         min={min}
         max={max}
@@ -56,7 +56,7 @@ export function DualRangeSlider({ min, max, value, onChange }: DualRangeSliderPr
         }}
         className="absolute w-full h-1 appearance-none pointer-events-none bg-transparent z-30 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
       />
-      <input
+      <input id="input_scrt" 
         type="range"
         min={min}
         max={max}

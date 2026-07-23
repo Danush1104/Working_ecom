@@ -4,10 +4,13 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  category: string;
   price: number;
   image_url: string;
+  category: string;
   is_active: boolean;
+  is_featured?: boolean;
+  rating?: number;
+  reviews_count?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -62,5 +65,39 @@ export const productService = {
 
   deleteProduct: async (id: string): Promise<void> => {
     await apiClient.delete(`${PRODUCT_API_URL}/${id}`);
+  }
+};
+
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  created_at?: string;
+}
+
+const CATEGORY_API_URL = PRODUCT_API_URL.replace(/\/products\/?$/, '/categories');
+
+export const categoryService = {
+  getCategories: async (): Promise<Category[]> => {
+    const response = await apiClient.get(CATEGORY_API_URL);
+    const normalize = (arr: any[]) => arr.map(c => ({ ...c, id: c.id || c.product_id || c.category_id }));
+    if (Array.isArray(response.data)) return normalize(response.data);
+    if (response.data && Array.isArray(response.data.data)) return normalize(response.data.data);
+    if (response.data && Array.isArray(response.data.Items)) return normalize(response.data.Items);
+    return [];
+  },
+
+  createCategory: async (data: { name: string; description?: string }): Promise<Category> => {
+    const response = await apiClient.post(CATEGORY_API_URL, data);
+    return response.data.data || response.data;
+  },
+
+  updateCategory: async (id: string, data: { name?: string; description?: string }): Promise<Category> => {
+    const response = await apiClient.patch(`${CATEGORY_API_URL}/${id}`, data);
+    return response.data.data || response.data;
+  },
+
+  deleteCategory: async (id: string): Promise<void> => {
+    await apiClient.delete(`${CATEGORY_API_URL}/${id}`);
   }
 };

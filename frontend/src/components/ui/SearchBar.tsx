@@ -26,7 +26,7 @@ export function SearchBar({ placeholder = 'Search...', onSearch, className = '' 
   return (
     <form onSubmit={handleSubmit} className={`relative flex items-center w-full ${className}`}>
       <Search className="absolute left-4 h-5 w-5 text-gray-400 dark:text-gray-500" />
-      <input
+      <input id="input_nsgw" 
         type="text"
         value={query}
         onChange={handleChange}

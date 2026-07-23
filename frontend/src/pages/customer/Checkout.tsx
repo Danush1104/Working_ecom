@@ -9,6 +9,7 @@ import { useCreateOrder } from '../../hooks/useOrders';
 import type { CheckoutPayload } from '../../api/orderService';
 import { PriceTag } from '../../components/ui/PriceTag';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { formatCurrency } from '../../utils/currency';
 
 const PAYMENT_METHODS = [
   { id: 'CARD', label: 'Credit / Debit Card', icon: CreditCard },
@@ -81,13 +82,13 @@ export default function Checkout() {
       animate={{ opacity: 1 }}
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:pb-8"
     >
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Checkout</h1>
+      <h1 className="text-4xl font-playfair font-bold text-gray-900 dark:text-white mb-8">Checkout</h1>
       
       <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-start relative">
         {/* Form Section */}
         <div className="space-y-8">
           <form id="checkout-form" onSubmit={handleSubmit} className="space-y-8">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="bg-white dark:bg-bg-card p-6 md:p-8 rounded-[32px] shadow-soft border border-gray-100 dark:border-border-subtle">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Contact Information</h2>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -105,7 +106,7 @@ export default function Checkout() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="bg-white dark:bg-bg-card p-6 md:p-8 rounded-[32px] shadow-soft border border-gray-100 dark:border-border-subtle">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Payment Method</h2>
               <div className="space-y-3">
                 {PAYMENT_METHODS.map((method) => (
@@ -113,8 +114,8 @@ export default function Checkout() {
                     key={method.id} 
                     className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-colors ${
                       paymentMethod === method.id 
-                        ? 'border-primary bg-primary/5 dark:bg-primary/10' 
-                        : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'
+                        ? 'border-primary bg-primary/5 dark:bg-primary/10 shadow-[0_0_15px_rgba(21,216,255,0.15)]' 
+                        : 'border-gray-100 dark:border-border-subtle hover:border-primary/30 hover:shadow-[0_4px_20px_rgba(21,216,255,0.08)]'
                     }`}
                   >
                     <input 
@@ -138,8 +139,8 @@ export default function Checkout() {
         </div>
 
         {/* Order Summary */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 lg:sticky lg:top-24">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Order Summary</h2>
+        <div className="bg-white dark:bg-bg-card p-6 md:p-8 rounded-[32px] shadow-soft border border-gray-100 dark:border-border-subtle lg:sticky lg:top-24">
+          <h2 className="text-xl font-playfair font-bold text-gray-900 dark:text-white mb-6">Order Summary</h2>
           
           <div className="space-y-4 mb-6 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
             {enrichedCart.map((item) => (
@@ -160,14 +161,14 @@ export default function Checkout() {
             ))}
           </div>
           
-          <div className="space-y-4 text-sm mb-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+          <div className="space-y-4 text-sm mb-6 pt-6 border-t border-gray-100 dark:border-border-subtle">
             <div className="flex justify-between text-gray-600 dark:text-gray-400">
               <span>Subtotal</span>
-              <span className="font-medium text-gray-900 dark:text-gray-200">${totalPrice.toFixed(2)}</span>
+              <span className="font-medium text-gray-900 dark:text-gray-200">{formatCurrency(totalPrice)}</span>
             </div>
             <div className="flex justify-between text-gray-600 dark:text-gray-400">
               <span>Estimated Tax (8%)</span>
-              <span className="font-medium text-gray-900 dark:text-gray-200">${tax.toFixed(2)}</span>
+              <span className="font-medium text-gray-900 dark:text-gray-200">{formatCurrency(tax)}</span>
             </div>
             <div className="flex justify-between text-gray-600 dark:text-gray-400">
               <span>Shipping</span>
@@ -175,10 +176,10 @@ export default function Checkout() {
             </div>
           </div>
           
-          <div className="border-t border-gray-100 dark:border-gray-700 pt-4 mb-6">
-            <div className="flex justify-between items-end">
-              <span className="text-base font-semibold text-gray-900 dark:text-white">Total</span>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">${total.toFixed(2)}</span>
+          <div className="border-t border-gray-100 dark:border-border-subtle pt-4 mb-6">
+            <div className="flex justify-between items-end mb-1">
+              <span className="font-playfair font-bold text-lg text-gray-900 dark:text-white">Total</span>
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(total)}</span>
             </div>
           </div>
           
@@ -186,7 +187,7 @@ export default function Checkout() {
             type="submit"
             form="checkout-form"
             disabled={createOrderMutation.isPending || enrichedCart.length === 0}
-            className="w-full flex items-center justify-center gap-2 h-14 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover active:scale-[0.98] transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 py-4 bg-primary text-bg-primary rounded-xl font-space font-bold uppercase tracking-wider hover:bg-primary-hover hover:scale-[1.02] transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900 shadow-[0_4px_20px_rgba(21,216,255,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {createOrderMutation.isPending ? 'Processing...' : 'Place Order'}
             {!createOrderMutation.isPending && <ArrowRight className="h-5 w-5" />}

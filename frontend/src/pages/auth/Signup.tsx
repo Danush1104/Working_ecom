@@ -128,7 +128,7 @@ export default function Signup() {
           <form onSubmit={onConfirm} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirmation Code</label>
-              <input
+              <input id="input_qtnc" 
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 type="text"

@@ -86,3 +86,39 @@ export const useUpdateStock = () => {
     }
   });
 };
+
+export const useRestoreStock = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) => 
+      inventoryService.restoreStock(productId, { quantity }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory', variables.productId] });
+      toast.success('Stock restored successfully');
+    },
+    onError: (error: any) => {
+      const errMsg = error?.response?.data?.message || error?.message || 'Failed to restore stock';
+      toast.error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+    }
+  });
+};
+
+export const useDeductStock = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) => 
+      inventoryService.deductStock(productId, { quantity }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory', variables.productId] });
+      toast.success('Stock deducted successfully');
+    },
+    onError: (error: any) => {
+      const errMsg = error?.response?.data?.message || error?.message || 'Failed to deduct stock';
+      toast.error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+    }
+  });
+};
