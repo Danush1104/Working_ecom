@@ -3,15 +3,15 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Filter, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { ProductCard } from '../../components/customer/ProductCard';
-import { Pagination } from '../../components/ui/Pagination';
 import { useProducts } from '../../hooks/useProducts';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { DualRangeSlider } from '../../components/ui/DualRangeSlider';
+import { Pagination } from '../../components/ui/Pagination';
 
 type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'name-asc';
 
 export default function Products() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -52,17 +52,7 @@ export default function Products() {
     setPage(1);
   };
 
-  const handleSearchChange = (val: string) => {
-    setSearchQuery(val);
-    setPage(1);
-    // update URL
-    if (val.trim()) {
-      searchParams.set('q', val);
-    } else {
-      searchParams.delete('q');
-    }
-    setSearchParams(searchParams, { replace: true });
-  };
+
 
   const filteredProducts = useMemo(() => {
     if (!products || !Array.isArray(products)) return [];
@@ -192,15 +182,7 @@ export default function Products() {
           <div className="hidden md:flex items-center justify-between gap-4">
             <h1 className="text-3xl font-playfair font-bold text-gray-900 dark:text-white">All Products</h1>
             
-            <div className="flex-1 max-w-md ml-auto flex items-center gap-4">
-              <input id="input_ujfd"  
-                type="text" 
-                placeholder="Search products..." 
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full h-11 px-6 rounded-full border border-gray-200 dark:border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-bg-card dark:text-white placeholder:text-gray-400 shadow-soft"
-              />
-              
+            <div className="flex-1 max-w-md ml-auto flex items-center justify-end gap-4">
               <div className="relative shrink-0 group">
                 <select id="select_xffe"  
                   value={sortBy}

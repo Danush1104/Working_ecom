@@ -171,21 +171,53 @@ class InventoryRepository:
 
     def admin_deduct_stock(self, product_id: str, quantity: int, updated_at: str) -> None:
         """Atomically deducts stock administratively (decreases total stock without touching reserved)."""
-        try:
-            self.table.update_item(
-                Key={"product_id": product_id},
-                UpdateExpression="SET stock = stock - :qty, updated_at = :updated_at",
-                ConditionExpression="attribute_exists(product_id) AND (stock - :qty) >= reserved",
-                ExpressionAttributeValues={
-                    ":qty": quantity,
-                    ":updated_at": updated_at
-                }
-            )
-        except ClientError as e:
-            if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-                raise e
-            logger.error(f"Failed to administratively deduct stock in DynamoDB: {str(e)}")
-            raise DatabaseError(f"Database error during administrative stock deduction: {str(e)}")
+        max_retries = 3
+        for attempt in range(max_retries + 1):
+            inventory = self.get_inventory(product_id)
+            if not inventory:
+                raise ClientError(
+                    {
+                        "Error": {
+                            "Code": "ConditionalCheckFailedException",
+                            "Message": f"Inventory record for product {product_id} not found"
+                        }
+                    },
+                    "UpdateItem"
+                )
+
+            if (inventory.stock - quantity) < inventory.reserved:
+                raise ClientError(
+                    {
+                        "Error": {
+                            "Code": "ConditionalCheckFailedException",
+                            "Message": "Cannot deduct stock below reserved amount"
+                        }
+                    },
+                    "UpdateItem"
+                )
+
+            try:
+                self.table.update_item(
+                    Key={"product_id": product_id},
+                    UpdateExpression="SET stock = stock - :qty, updated_at = :updated_at",
+                    ConditionExpression="attribute_exists(product_id) AND stock = :current_stock",
+                    ExpressionAttributeValues={
+                        ":qty": quantity,
+                        ":current_stock": inventory.stock,
+                        ":updated_at": updated_at
+                    }
+                )
+                return
+            except ClientError as e:
+                if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+                    if attempt == max_retries or not self.inventory_exists(product_id):
+                        raise e
+                    logger.info(f"Concurrency conflict during admin deduct for product {product_id}. Retrying (attempt {attempt + 1}/{max_retries})...")
+                    import time
+                    time.sleep(0.05 * (attempt + 1))
+                    continue
+                logger.error(f"Failed to administratively deduct stock in DynamoDB: {str(e)}")
+                raise DatabaseError(f"Database error during administrative stock deduction: {str(e)}")
 
     def restore_stock(self, product_id: str, quantity: int, updated_at: str) -> None:
         """Atomically restores stock after cancellations (increases stock level)."""

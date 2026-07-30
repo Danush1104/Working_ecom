@@ -13,7 +13,11 @@ class Product:
     created_at: str
     updated_at: str
     image_url: Optional[str] = None
+    images: Optional[list] = None
     is_featured: bool = False
+    average_rating: float = 0.0
+    total_reviews: int = 0
+    rating_distribution: Optional[Dict[str, int]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Converts the Product instance to a dictionary for DynamoDB storage."""
@@ -39,5 +43,9 @@ class Product:
             created_at=data["created_at"],
             updated_at=data["updated_at"],
             image_url=data.get("image_url"),
-            is_featured=bool(data.get("is_featured", False))
+            images=data.get("images", []),
+            is_featured=bool(data.get("is_featured", False)),
+            average_rating=float(data.get("average_rating", 0.0)),
+            total_reviews=int(data.get("total_reviews", 0)),
+            rating_distribution=data.get("rating_distribution", {"5":0, "4":0, "3":0, "2":0, "1":0})
         )

@@ -41,25 +41,25 @@ export function UpdateStockModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-xl overflow-hidden"
+            className="bg-bg-card/90 backdrop-blur-2xl rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden border border-border-subtle"
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-border-subtle">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
+                <div className="p-2 bg-primary/10 rounded-xl">
                   <Package className="h-5 w-5 text-primary" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-space font-bold text-white tracking-tight">
                   {mode === 'initialize' ? 'Initialize Inventory' : mode === 'restore' ? 'Restore Stock' : mode === 'deduct' ? 'Deduct Stock' : 'Set Stock'}
                 </h2>
               </div>
               <button 
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                className="p-2 text-text-secondary hover:text-white bg-white/5 rounded-full transition-colors focus:outline-none"
                 disabled={isLoading}
               >
                 <X className="h-5 w-5" />
@@ -69,14 +69,14 @@ export function UpdateStockModal({
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {productName && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Product</p>
-                  <p className="text-base text-gray-900 dark:text-white font-medium">{productName}</p>
+                  <p className="text-sm font-medium text-text-secondary mb-1">Product</p>
+                  <p className="text-base text-white font-medium">{productName}</p>
                 </div>
               )}
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
                     {mode === 'update' || mode === 'initialize' ? 'New Stock Level' : 'Quantity'}
                   </label>
                   <input
@@ -84,34 +84,36 @@ export function UpdateStockModal({
                     min="0"
                     value={value}
                     onChange={(e) => setValue(Number(e.target.value))}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-gray-900 dark:text-white font-medium"
+                    className="w-full px-4 py-3 bg-bg-primary/50 border border-border-subtle rounded-xl focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all outline-none text-white font-medium shadow-inner"
                     required
                   />
                 </div>
                 {mode === 'update' && (
-                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Current Stock</span>
-                    <span className="font-mono text-gray-900 dark:text-white font-medium">{currentStock}</span>
+                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-border-subtle">
+                    <span className="text-sm text-text-secondary">Current Stock</span>
+                    <span className="font-mono text-white font-bold">{currentStock}</span>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex justify-end gap-3 pt-4 border-t border-border-subtle">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={isLoading}
-                  className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors disabled:opacity-50"
+                  className="px-5 py-2.5 text-sm font-medium text-text-secondary bg-white/5 border border-border-subtle hover:text-white hover:bg-white/10 rounded-xl transition-colors disabled:opacity-50 focus:outline-none"
                 >
                   Cancel
                 </button>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isLoading}
-                  className="px-5 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2.5 text-sm font-bold text-bg-primary bg-primary hover:bg-primary-hover hover:shadow-[0_0_15px_rgba(21,216,255,0.4)] rounded-xl transition-all disabled:opacity-50 flex items-center gap-2 focus:outline-none"
                 >
                   {isLoading ? 'Saving...' : mode === 'initialize' ? 'Initialize Stock' : 'Update Stock'}
-                </button>
+                </motion.button>
               </div>
             </form>
           </motion.div>

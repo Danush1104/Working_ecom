@@ -15,7 +15,9 @@ import type { Category } from '../../api/productService';
 
 const categorySchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  description: z.string().optional()
+  description: z.string().optional(),
+  icon_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  banner_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
 
 type CategoryForm = z.infer<typeof categorySchema>;
@@ -59,10 +61,10 @@ export default function Categories() {
   const openModal = (category?: Category) => {
     if (category) {
       setEditingCategory(category);
-      reset({ name: category.name, description: category.description });
+      reset({ name: category.name, description: category.description, icon_url: category.icon_url || '', banner_url: category.banner_url || '' });
     } else {
       setEditingCategory(null);
-      reset({ name: '', description: '' });
+      reset({ name: '', description: '', icon_url: '', banner_url: '' });
     }
     setIsModalOpen(true);
   };
@@ -92,6 +94,16 @@ export default function Categories() {
   };
 
   const columns = [
+    { 
+      header: 'Icon', 
+      accessor: (item: Category) => item.icon_url ? (
+        <img src={item.icon_url} alt={item.name} className="w-10 h-10 rounded-full object-cover bg-gray-100 dark:bg-gray-800" />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-500 font-bold">
+          {item.name.charAt(0).toUpperCase()}
+        </div>
+      )
+    },
     { header: 'Name', accessor: (item: Category) => <span className="font-medium text-gray-900 dark:text-white">{item.name}</span> },
     { header: 'Description', accessor: (item: Category) => item.description || '-' },
     { header: 'Created', accessor: (item: Category) => new Date(item.created_at || new Date().toISOString()).toLocaleDateString() },
@@ -193,13 +205,13 @@ export default function Categories() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+              className="bg-bg-card/90 backdrop-blur-2xl border border-border-subtle rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-md overflow-hidden"
             >
-              <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <div className="flex items-center justify-between p-6 border-b border-border-subtle">
+                <h2 className="text-xl font-space font-bold text-white">
                   {editingCategory ? 'Edit Category' : 'Add Category'}
                 </h2>
-                <button onClick={closeModal} className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                <button onClick={closeModal} className="text-text-secondary hover:text-white transition-colors">
                   <X className="w-6 h-6" />
                 </button>
               </div>
@@ -226,6 +238,32 @@ export default function Categories() {
                     rows={3}
                     className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent dark:text-white"
                   ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Icon URL
+                  </label>
+                  <input 
+                    {...register('icon_url')}
+                    type="url"
+                    className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent dark:text-white"
+                    placeholder="https://..."
+                  />
+                  {errors.icon_url && <p className="mt-1 text-sm text-red-500">{errors.icon_url.message}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Banner URL
+                  </label>
+                  <input 
+                    {...register('banner_url')}
+                    type="url"
+                    className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent dark:text-white"
+                    placeholder="https://..."
+                  />
+                  {errors.banner_url && <p className="mt-1 text-sm text-red-500">{errors.banner_url.message}</p>}
                 </div>
 
                 <div className="flex space-x-3 pt-4">

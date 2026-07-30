@@ -7,11 +7,14 @@ import { FilterDrawer } from '../../components/admin/FilterDrawer';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { AdminRefreshButton } from '../../components/ui/AdminRefreshButton';
-import { DetailsDrawer } from '../../components/ui/DetailsDrawer';
+import { useProducts } from '../../hooks/useProducts';
+import { DetailDrawer } from '../../components/admin/DetailDrawer';
 import { Pagination } from '../../components/ui/Pagination';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../api/client';
 import toast from 'react-hot-toast';
+import { hideReview } from '../../api/reviewService';
+import { exportToCSV } from '../../utils/csv';
 
 const BASE_URL = import.meta.env.VITE_PRODUCT_SERVICE_URL.replace(/\/products$/, '');
 const REVIEWS_API_URL = `${BASE_URL}/reviews`;
@@ -21,6 +24,8 @@ export default function Reviews() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedReview, setSelectedReview] = useState<any | null>(null);
+  const { data: products = [] } = useProducts();
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   
   // Filters
   const [ratingFilter, setRatingFilter] = useState<string>('all');
@@ -49,17 +54,37 @@ export default function Reviews() {
     onError: () => toast.error('Failed to delete review')
   });
 
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: async (review: any) => {
+      await hideReview(review.review_id, review.product_id);
+    },
+    onSuccess: () => {
+      toast.success('Review visibility toggled');
+      queryClient.invalidateQueries({ queryKey: ['admin-reviews'] });
+      setSelectedReview(null);
+    },
+    onError: () => toast.error('Failed to toggle review visibility')
+  });
+
   const columns = [
     {
-      header: 'Product ID',
-      accessor: (item: any) => (
-        <span className="font-mono text-xs">{item.product_id.slice(0,8)}...</span>
-      )
+      header: 'Product',
+      accessor: (item: any) => {
+        const product = products.find(p => p.id === item.product_id);
+        const name = product ? product.name : item.product_id;
+        return (
+          <span className="font-medium text-gray-900 dark:text-white" title={name}>
+            {name.length > 20 ? `${name.slice(0, 20)}...` : name}
+          </span>
+        );
+      }
     },
     {
-      header: 'User ID',
+      header: 'Customer',
       accessor: (item: any) => (
-        <span className="font-mono text-xs">{item.user_id.slice(0,8)}...</span>
+        <span className="text-gray-600 dark:text-gray-300" title={item.user_name || item.user_id}>
+          {(item.user_name || item.user_id).length > 15 ? `${(item.user_name || item.user_id).slice(0, 15)}...` : (item.user_name || item.user_id)}
+        </span>
       )
     },
     {
@@ -78,6 +103,16 @@ export default function Reviews() {
           <span className="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs rounded-full font-medium">Verified</span>
         ) : (
           <span className="px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 text-xs rounded-full font-medium">Unverified</span>
+        )
+      )
+    },
+    {
+      header: 'Status',
+      accessor: (item: any) => (
+        item.status === 'HIDDEN' ? (
+          <span className="px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 text-xs rounded-full font-medium">Hidden</span>
+        ) : (
+          <span className="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs rounded-full font-medium">Active</span>
         )
       )
     },
@@ -128,6 +163,7 @@ export default function Reviews() {
         placeholder="Search reviews (Product, User, Text)..." 
         onSearch={(val) => { setSearchQuery(val); setPage(1); }}
         onFilterClick={() => setIsFilterOpen(true)}
+        onDownload={() => exportToCSV(processedReviews, 'reviews.csv')}
       />
 
       <FilterDrawer
@@ -138,8 +174,8 @@ export default function Reviews() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rating</label>
-            <select value={ratingFilter} onChange={e => setRatingFilter(e.target.value)} className="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800">
+            <label className="block text-sm font-medium text-text-secondary mb-1">Rating</label>
+            <select value={ratingFilter} onChange={e => setRatingFilter(e.target.value)} className="w-full rounded-lg border-border-subtle bg-bg-primary/50 text-white">
               <option value="all">All Ratings</option>
               <option value="5">5 Stars</option>
               <option value="4">4 Stars</option>
@@ -149,8 +185,8 @@ export default function Reviews() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-            <select value={verifiedFilter} onChange={e => setVerifiedFilter(e.target.value)} className="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800">
+            <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
+            <select value={verifiedFilter} onChange={e => setVerifiedFilter(e.target.value)} className="w-full rounded-lg border-border-subtle bg-bg-primary/50 text-white">
               <option value="all">All</option>
               <option value="true">Verified Purchase</option>
               <option value="false">Unverified</option>
@@ -163,7 +199,15 @@ export default function Reviews() {
         <EmptyState icon={MessageSquare} title="No Reviews Found" description="Try adjusting your search or filters." />
       ) : (
         <>
-          <DataTable columns={columns} data={paginatedReviews} keyExtractor={(item: any) => item.review_id} />
+          <DataTable 
+            columns={columns} 
+            data={paginatedReviews} 
+            keyExtractor={(item: any) => item.review_id} 
+            onRowClick={(item) => {
+              setSelectedReview(item);
+              setIsViewModalOpen(true);
+            }}
+          />
           {totalPages > 1 && (
             <div className="mt-6 flex justify-end">
               <Pagination 
@@ -176,56 +220,42 @@ export default function Reviews() {
         </>
       )}
 
-      <DetailsDrawer isOpen={!!selectedReview} onClose={() => setSelectedReview(null)} title="Review Details">
-        {selectedReview && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-1">Product ID</h4>
-                <p className="text-sm font-mono dark:text-white break-all">{selectedReview.product_id}</p>
+      <DetailDrawer 
+        isOpen={isViewModalOpen} 
+        onClose={() => setIsViewModalOpen(false)} 
+        title="Review Details"
+        fields={selectedReview ? [
+          { label: 'Product Name', value: products.find(p => p.id === selectedReview.product_id)?.name || selectedReview.product_id },
+          { label: 'Customer', value: selectedReview.user_name || selectedReview.user_id },
+          { label: 'User ID', value: selectedReview.user_id },
+          { label: 'Rating', value: `${selectedReview.rating} / 5 Stars` },
+          { label: 'Status', value: selectedReview.verified_purchase ? 'Verified Purchase' : 'Unverified' },
+          { label: 'Visibility', value: selectedReview.status },
+          { label: 'Date', value: new Date(selectedReview.created_at).toLocaleString() },
+          { label: 'Review Text', value: selectedReview.review || 'No text provided.' },
+          { 
+            label: 'Actions', 
+            value: (
+              <div className="flex gap-2 mt-2">
+                <button onClick={() => {
+                  if (confirm('Are you sure you want to delete this review?')) {
+                    deleteMutation.mutate(selectedReview);
+                    setIsViewModalOpen(false);
+                  }
+                }} className="px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 transition-colors">
+                  Delete
+                </button>
+                <button onClick={() => {
+                  toggleVisibilityMutation.mutate(selectedReview);
+                  setIsViewModalOpen(false);
+                }} className="px-4 py-2 bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-lg hover:bg-orange-200 transition-colors">
+                  {selectedReview.status === 'HIDDEN' ? 'Unhide' : 'Hide'}
+                </button>
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-1">User ID</h4>
-                <p className="text-sm font-mono dark:text-white break-all">{selectedReview.user_id}</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-1">Rating</h4>
-                <div className="flex items-center gap-1 text-yellow-500">
-                  <Star className="h-5 w-5 fill-current" />
-                  <span className="font-bold text-gray-900 dark:text-white">{selectedReview.rating}/5</span>
-                </div>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-1">Status</h4>
-                {selectedReview.verified_purchase ? 'Verified Purchase' : 'Unverified'}
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-2">Review Content</h4>
-              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-gray-900 dark:text-gray-100 text-sm">
-                {selectedReview.review || <span className="italic text-gray-500">No text provided.</span>}
-              </div>
-            </div>
-
-            <div className="pt-4 flex justify-between">
-              <button onClick={() => {
-                if (confirm('Are you sure you want to delete this review?')) {
-                  deleteMutation.mutate(selectedReview);
-                }
-              }} className="px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 transition-colors">
-                Delete Review
-              </button>
-              <button onClick={() => setSelectedReview(null)} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                Close
-              </button>
-            </div>
-          </div>
-        )}
-      </DetailsDrawer>
+            )
+          }
+        ] : []}
+      />
     </motion.div>
   );
 }

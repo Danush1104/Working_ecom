@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Undo2, AlertCircle } from 'lucide-react';
+import { Undo2, AlertCircle } from 'lucide-react';
 import { DataTable } from '../../components/admin/DataTable';
 import { FilterBar } from '../../components/admin/FilterBar';
 import { FilterDrawer } from '../../components/admin/FilterDrawer';
@@ -9,7 +9,8 @@ import { useAdminPayments, useRefundPayment } from '../../hooks/usePayments';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { formatCurrency } from '../../utils/currency';
 import { Pagination } from '../../components/ui/Pagination';
-import { ViewModal } from '../../components/ui/ViewModal';
+import { DetailDrawer } from '../../components/admin/DetailDrawer';
+import { exportToCSV } from '../../utils/csv';
 
 export default function Payments() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,15 +55,34 @@ export default function Payments() {
   const columns: any[] = [
     { 
       header: 'Payment ID', 
-      accessor: (item: any) => <span className="font-medium text-gray-900 dark:text-white">{item.payment_id}</span> 
+      accessor: (item: any) => (
+        <span className="font-medium text-gray-900 dark:text-white" title={item.payment_id}>
+          {item.payment_id.length > 13 ? `${item.payment_id.slice(0, 13)}...` : item.payment_id}
+        </span>
+      ) 
     },
     {
       header: 'Order ID',
-      accessor: (item: any) => <span className="text-gray-600 dark:text-gray-300">{item.order_id}</span>
+      accessor: (item: any) => (
+        <span className="text-gray-600 dark:text-gray-300" title={item.order_id}>
+          {item.order_id.length > 13 ? `${item.order_id.slice(0, 13)}...` : item.order_id}
+        </span>
+      )
     },
     {
       header: 'Customer',
-      accessor: (item: any) => <span className="text-gray-600 dark:text-gray-300">{item.user_id}</span>
+      accessor: (item: any) => (
+        <div className="flex flex-col">
+          <span className="text-gray-900 dark:text-gray-100 font-medium" title={item.customer_username || item.user_id}>
+            {(item.customer_username || item.user_id).length > 15 ? `${(item.customer_username || item.user_id).slice(0, 15)}...` : (item.customer_username || item.user_id)}
+          </span>
+          {item.customer_email && (
+            <span className="text-xs text-gray-500 dark:text-gray-400" title={item.customer_email}>
+              {item.customer_email.length > 20 ? `${item.customer_email.slice(0, 20)}...` : item.customer_email}
+            </span>
+          )}
+        </div>
+      )
     },
     { 
       header: 'Date', 
@@ -90,7 +110,7 @@ export default function Payments() {
       header: 'Actions',
       className: 'text-right',
       accessor: (item: any) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
           {item.payment_status === 'SUCCESS' && (
             <button 
               onClick={() => handleRefund(item.payment_id)}
@@ -101,16 +121,6 @@ export default function Payments() {
               <Undo2 className="h-4 w-4" />
             </button>
           )}
-          <button 
-            onClick={() => {
-              setSelectedPayment(item);
-              setIsViewModalOpen(true);
-            }}
-            className="p-1.5 text-gray-400 hover:text-primary transition-colors"
-            title="View Details"
-          >
-            <Eye className="h-4 w-4" />
-          </button>
         </div>
       )
     }
@@ -148,6 +158,7 @@ export default function Payments() {
         placeholder="Search payments by ID, Order ID or Customer..." 
         onSearch={(val) => { setSearchQuery(val); setPage(1); }}
         onFilterClick={() => setIsFilterOpen(true)}
+        onDownload={() => exportToCSV(processedPayments, 'payments.csv')}
       />
 
       <FilterDrawer
@@ -174,7 +185,11 @@ export default function Payments() {
       <DataTable 
         columns={columns} 
         data={paginatedPayments} 
-        keyExtractor={(item) => item.payment_id} 
+        keyExtractor={(item) => item.payment_id}
+        onRowClick={(item) => {
+          setSelectedPayment(item);
+          setIsViewModalOpen(true);
+        }}
       />
       {totalPages > 1 && (
         <div className="mt-6 flex justify-end">
@@ -186,13 +201,15 @@ export default function Payments() {
         </div>
       )}
 
-      <ViewModal
+      <DetailDrawer
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         title="Payment Details"
         fields={selectedPayment ? [
           { label: 'Payment ID', value: selectedPayment.payment_id },
           { label: 'Order ID', value: selectedPayment.order_id },
+          { label: 'Customer Name', value: selectedPayment.customer_username || '—' },
+          { label: 'Customer Email', value: selectedPayment.customer_email || '—' },
           { label: 'User ID', value: selectedPayment.user_id },
           { label: 'Amount', value: formatCurrency(selectedPayment.amount) },
           { label: 'Payment Method', value: selectedPayment.payment_method },

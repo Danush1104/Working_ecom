@@ -7,6 +7,8 @@ import { PriceTag } from '../../components/ui/PriceTag';
 import { QuantitySelector } from '../../components/ui/QuantitySelector';
 import { SectionHeader } from '../../components/ui/SectionHeader';
 import { ProductCard } from '../../components/customer/ProductCard';
+import { ReviewSection } from '../../components/customer/ReviewSection';
+import { Star } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
 import { useProduct, useProducts } from '../../hooks/useProducts';
 import { useProductInventory } from '../../hooks/useInventory';
@@ -25,6 +27,7 @@ export default function ProductDetails() {
   const addToCartMutation = useAddToCart();
   
   const [quantity, setQuantity] = useState(1);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   if (isLoading) {
@@ -74,6 +77,8 @@ export default function ProductDetails() {
 
   const inWishlist = isInWishlist(product.id);
   const relatedProducts = products?.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4) || [];
+  const allImages = [product.image_url, ...(product.images || [])].filter(Boolean) as string[];
+  const displayImage = allImages.length > 0 ? allImages[activeImageIndex] : `https://placehold.co/600x750/151A25/ffffff?text=${product.name.charAt(0)}`;
   
   // Safe defaults if inventory is loading or failed
   const hasInventoryRecord = inventory !== undefined && inventory !== null;
@@ -117,23 +122,37 @@ export default function ProductDetails() {
         </Link>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-12 items-start">
+      <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
         {/* Image Gallery */}
-        <div className="aspect-[4/5] bg-gray-50 dark:bg-bg-card rounded-[32px] overflow-hidden border border-gray-100 dark:border-border-subtle group cursor-pointer shadow-soft hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] transition-all duration-500 relative">
-          <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/20 to-transparent z-10" />
-          <img 
-            src={product.image_url || 'https://via.placeholder.com/600'} 
-            alt={product.name}
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-in-out"
-          />
+        <div className="md:sticky md:top-24 h-fit space-y-4">
+          <div className="aspect-[4/5] bg-gray-50 dark:bg-bg-card rounded-[32px] overflow-hidden border border-gray-100 dark:border-border-subtle group cursor-pointer shadow-soft hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] transition-all duration-500 relative">
+            <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/20 to-transparent z-10" />
+            <img 
+              key={displayImage}
+              src={displayImage} 
+              alt={product.name}
+              className="w-full h-full object-cover object-center animate-in fade-in zoom-in-[0.98] duration-500"
+            />
+          </div>
         </div>
 
         {/* Details */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           <div>
             <p className="text-sm font-space font-bold text-primary uppercase tracking-wider mb-3">{product.category}</p>
-            <h1 className="text-4xl md:text-5xl font-playfair font-bold text-gray-900 dark:text-text-primary tracking-tight mb-6 leading-tight">{product.name}</h1>
-            <div className="flex items-center gap-4 mb-6">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-playfair font-bold text-gray-900 dark:text-text-primary tracking-tight mb-2 leading-tight">{product.name}</h1>
+            
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex text-yellow-500">
+                <Star className="h-4 w-4 fill-current" />
+              </div>
+              <span className="font-bold text-gray-900 dark:text-white">{product.average_rating?.toFixed(1) || '0.0'}</span>
+              <a href="#reviews" className="text-sm text-primary hover:underline font-medium">
+                ({product.total_reviews || 0} Reviews)
+              </a>
+            </div>
+
+            <div className="flex items-center gap-4 mb-4">
               <PriceTag price={product.price} size="lg" />
               
               {isLoadingInv ? (
@@ -165,7 +184,7 @@ export default function ProductDetails() {
             </p>
           </div>
 
-          <div className="py-8 border-y border-gray-100 dark:border-border-subtle space-y-8">
+          <div className="py-6 border-y border-gray-100 dark:border-border-subtle space-y-6">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-gray-900 dark:text-gray-200">Quantity</span>
               <QuantitySelector 
@@ -205,23 +224,47 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
             <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
-              <Truck className="h-5 w-5 text-gray-400 dark:text-gray-500 dark:text-gray-400 shrink-0" />
+              <Truck className="h-5 w-5 text-gray-400 shrink-0" />
               <span>Free shipping on orders over ₹2,500</span>
             </div>
             <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
-              <ShieldCheck className="h-5 w-5 text-gray-400 dark:text-gray-500 dark:text-gray-400 shrink-0" />
+              <ShieldCheck className="h-5 w-5 text-gray-400 shrink-0" />
               <span>30-day money-back guarantee</span>
             </div>
           </div>
+
+          {allImages.length > 1 && (
+            <div className="pt-6 border-t border-gray-100 dark:border-border-subtle">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-200 mb-4">Additional Photos</h3>
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {allImages.map((img, idx) => {
+                  const isActive = idx === activeImageIndex;
+                  return (
+                    <button
+                      key={`${img}-${idx}`}
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`relative w-20 h-24 shrink-0 rounded-2xl overflow-hidden border-2 transition-all duration-300 focus:outline-none hover:scale-105 ${
+                        isActive ? 'border-cyan-500 shadow-[0_0_15px_rgba(21,216,255,0.4)]' : 'border-transparent hover:border-cyan-500/50'
+                      }`}
+                    >
+                      <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover bg-bg-card" />
+                      <div className={`absolute inset-0 transition-colors duration-300 ${isActive ? 'bg-transparent' : 'bg-black/40 hover:bg-transparent'}`} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
-        <section>
-          <SectionHeader title="You might also like" />
+        <section className="pt-8">
+          <SectionHeader title="Recommended For You" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {relatedProducts.map(p => (
               <ProductCard key={p.id} {...p} />
@@ -229,6 +272,11 @@ export default function ProductDetails() {
           </div>
         </section>
       )}
+
+      {/* Reviews Section - Placed at the very bottom */}
+      <div id="reviews" className="pt-12 mt-8 border-t border-gray-100 dark:border-border-subtle">
+        <ReviewSection productId={product.id} product={product} />
+      </div>
     </motion.div>
   );
 }

@@ -40,21 +40,21 @@ export function FilterDrawer({ isOpen, onClose, children, title = "Filters", onA
                 leaveTo="translate-x-full"
               >
                 <Dialog.Panel className="pointer-events-auto w-screen max-w-md">
-                  <div className="flex h-full flex-col bg-white dark:bg-gray-900 shadow-2xl rounded-l-3xl overflow-hidden">
+                  <div className="flex h-full flex-col bg-bg-card/90 backdrop-blur-2xl shadow-2xl border-l border-border-subtle rounded-l-3xl overflow-hidden">
                     
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center justify-between px-6 py-6 border-b border-border-subtle">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/10 rounded-xl">
                           <Filter className="h-5 w-5 text-primary" />
                         </div>
-                        <Dialog.Title className="text-lg font-bold text-gray-900 dark:text-white">
+                        <Dialog.Title className="text-lg font-bold text-white">
                           {title}
                         </Dialog.Title>
                       </div>
                       <button
                         type="button"
-                        className="rounded-full p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+                        className="rounded-full p-2 text-text-secondary hover:text-white hover:bg-white/10 focus:outline-none transition-colors"
                         onClick={onClose}
                       >
                         <X className="h-5 w-5" />
@@ -62,21 +62,21 @@ export function FilterDrawer({ isOpen, onClose, children, title = "Filters", onA
                     </div>
 
                     {/* Content */}
-                    <div className="relative flex-1 px-6 py-6 overflow-y-auto">
-                      <div className="space-y-6">
+                    <div className="relative flex-1 px-6 py-6 overflow-y-auto custom-scrollbar">
+                      <div className="space-y-6 text-white">
                         {children}
                       </div>
                     </div>
 
                     {/* Footer */}
-                    <div className="border-t border-gray-100 dark:border-gray-800 px-6 py-6 bg-gray-50/50 dark:bg-gray-900/50">
+                    <div className="border-t border-border-subtle px-6 py-6 bg-black/20">
                       <div className="flex gap-3">
                         <button
                           type="button"
                           onClick={onReset}
-                          className="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                          className="flex-1 px-4 py-3 text-sm font-semibold text-text-secondary bg-white/5 border border-border-subtle rounded-xl hover:bg-white/10 hover:text-white transition-colors focus:outline-none"
                         >
-                          Reset Filters
+                          Reset
                         </button>
                         <button
                           type="button"
@@ -84,9 +84,9 @@ export function FilterDrawer({ isOpen, onClose, children, title = "Filters", onA
                             if (onApply) onApply();
                             onClose();
                           }}
-                          className="flex-1 px-4 py-3 text-sm font-semibold text-bg-primary bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-lg shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                          className="flex-1 px-4 py-3 text-sm font-bold text-bg-primary bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-[0_0_15px_rgba(21,216,255,0.4)] focus:outline-none"
                         >
-                          Apply Filters
+                          Apply
                         </button>
                       </div>
                     </div>

@@ -220,7 +220,7 @@ export default function Orders() {
                   <div>
                     <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-2">Date</p>
                     <p className="font-semibold text-text-primary">
-                      {safeFormatDate(order.created_at, { year: 'numeric', month: 'numeric', day: 'numeric' })}
+                      {safeFormatDate(selectedOrder.created_at, { year: 'numeric', month: 'numeric', day: 'numeric' })}
                     </p>
                   </div>
                 </div>

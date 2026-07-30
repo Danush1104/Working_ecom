@@ -14,8 +14,8 @@ const Wishlist = lazy(() => import('../pages/customer/Wishlist'));
 const Profile = lazy(() => import('../pages/customer/Profile'));
 const Payment = lazy(() => import('../pages/customer/Payment'));
 const PaymentSuccess = lazy(() => import('../pages/customer/PaymentSuccess'));
-const PlaceholderPage = lazy(() => import('../components/ui/PlaceholderPage'));
 const Settings = lazy(() => import('../pages/customer/Settings'));
+const AllReviews = lazy(() => import('../pages/customer/AllReviews'));
 
 const Dashboard = lazy(() => import('../pages/admin/Dashboard'));
 const AdminProducts = lazy(() => import('../pages/admin/Products'));
@@ -24,6 +24,7 @@ const Inventory = lazy(() => import('../pages/admin/Inventory'));
 const Carts = lazy(() => import('../pages/admin/Carts'));
 const Orders = lazy(() => import('../pages/admin/Orders'));
 const Payments = lazy(() => import('../pages/admin/Payments'));
+const Reviews = lazy(() => import('../pages/admin/Reviews'));
 
 const Login = lazy(() => import('../pages/auth/Login'));
 const Signup = lazy(() => import('../pages/auth/Signup'));
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
           { path: 'payment/:orderId', element: <Payment /> },
           { path: 'payment-success/:orderId/:paymentId', element: <PaymentSuccess /> },
           { path: 'settings', element: <Settings /> },
+          { path: 'reviews', element: <AllReviews /> },
         ],
       },
       {
@@ -66,6 +68,7 @@ export const router = createBrowserRouter([
               { path: 'carts', element: <Carts /> },
               { path: 'orders', element: <Orders /> },
               { path: 'payments', element: <Payments /> },
+              { path: 'reviews', element: <Reviews /> },
               { path: 'dashboard', element: <Dashboard /> },
             ],
           },

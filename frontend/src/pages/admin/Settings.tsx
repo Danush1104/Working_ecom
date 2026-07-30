@@ -73,9 +73,9 @@ export default function Settings() {
         <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your account preferences and system settings</p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+      <div className="bg-bg-card/40 backdrop-blur-xl rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-border-subtle overflow-hidden">
+        <div className="p-6 border-b border-border-subtle">
+          <h2 className="text-xl font-space font-bold text-white flex items-center gap-2 tracking-tight">
             <User className="w-5 h-5 text-primary" />
             Account Information
           </h2>
@@ -83,30 +83,30 @@ export default function Settings() {
         <div className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Email Address</label>
               <input name="email_cwvk" 
                 type="email"
                 value={user?.email || 'admin@example.com'}
                 disabled
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                className="w-full px-4 py-3 bg-black/20 border border-border-subtle rounded-xl text-text-secondary cursor-not-allowed shadow-inner"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Role</label>
               <input name="text_miac" 
                 type="text"
                 value="Administrator"
                 disabled
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                className="w-full px-4 py-3 bg-black/20 border border-border-subtle rounded-xl text-text-secondary cursor-not-allowed shadow-inner"
               />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+      <div className="bg-bg-card/40 backdrop-blur-xl rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-border-subtle overflow-hidden">
+        <div className="p-6 border-b border-border-subtle">
+          <h2 className="text-xl font-space font-bold text-white flex items-center gap-2 tracking-tight">
             {isDarkMode ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
             Appearance
           </h2>
@@ -133,9 +133,9 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+      <div className="bg-bg-card/40 backdrop-blur-xl rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-border-subtle overflow-hidden">
+        <div className="p-6 border-b border-border-subtle">
+          <h2 className="text-xl font-space font-bold text-white flex items-center gap-2 tracking-tight">
             <Bell className="w-5 h-5 text-primary" />
             Notifications
           </h2>
@@ -195,9 +195,9 @@ export default function Settings() {
       </div>
 
       {/* Admin Management Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+      <div className="bg-bg-card/40 backdrop-blur-xl rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-border-subtle overflow-hidden">
+        <div className="p-6 border-b border-border-subtle">
+          <h2 className="text-xl font-space font-bold text-white flex items-center gap-2 tracking-tight">
             <UserPlus className="w-5 h-5 text-primary" />
             Admin Management
           </h2>
@@ -214,7 +214,7 @@ export default function Settings() {
                 value={newAdminName}
                 onChange={(e) => setNewAdminName(e.target.value)}
                 placeholder="Jane Doe"
-                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                className="w-full px-4 py-3 bg-bg-primary/50 border border-border-subtle rounded-xl focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all outline-none text-white shadow-inner"
               />
             </div>
             <div>
@@ -225,7 +225,7 @@ export default function Settings() {
                 value={newAdminEmail}
                 onChange={(e) => setNewAdminEmail(e.target.value)}
                 placeholder="admin@example.com"
-                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                className="w-full px-4 py-3 bg-bg-primary/50 border border-border-subtle rounded-xl focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all outline-none text-white shadow-inner"
               />
             </div>
             <div>
@@ -236,7 +236,7 @@ export default function Settings() {
                 value={newAdminPassword}
                 onChange={(e) => setNewAdminPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                className="w-full px-4 py-3 bg-bg-primary/50 border border-border-subtle rounded-xl focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all outline-none text-white shadow-inner"
               />
             </div>
             <button
@@ -250,14 +250,16 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <button
+      <div className="flex justify-end pt-4">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleSave}
-          className="flex items-center px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-light transition-colors font-medium"
+          className="flex items-center px-6 py-3 bg-primary text-bg-primary rounded-xl hover:bg-primary-hover hover:shadow-[0_0_15px_rgba(21,216,255,0.4)] transition-all font-bold focus:outline-none"
         >
           <Save className="w-5 h-5 mr-2" />
           Save Changes
-        </button>
+        </motion.button>
       </div>
     </motion.div>
   );

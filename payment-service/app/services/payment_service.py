@@ -106,7 +106,9 @@ class PaymentService:
             payment_method=payment_method,
             payment_status="PENDING",
             created_at=now,
-            updated_at=now
+            updated_at=now,
+            customer_username=order_data.get("customer_username"),
+            customer_email=order_data.get("customer_email")
         )
         
         self.repository.save_payment(payment)
@@ -138,7 +140,13 @@ class PaymentService:
         try:
             logger.info(f"Notifying Order Service: {payment.order_id} -> status={new_status} (URL: {order_webhook_url})")
             secret = os.getenv("INTERNAL_WEBHOOK_SECRET", "default-internal-secret-123")
-            HttpClient.request("PATCH", order_webhook_url, json_data=webhook_body, headers={"x-internal-secret": secret}, timeout=10.0)
+            HttpClient.request("PATCH", order_webhook_url, json_data=webhook_body, headers={"x-internal-secret": secret}, timeout=20.0)
+        except ConflictError as e:
+            if getattr(e, "error_code", "") == ERROR_DUPLICATE_PAYMENT:
+                logger.warning(f"Order Service responded with DUPLICATE_PAYMENT for {payment.order_id}. "
+                               f"This means the order was already successfully updated. Proceeding to mark payment as SUCCESS.")
+            else:
+                raise InternalServerError(f"Order Service returned ConflictError for URL '{order_webhook_url}': {str(e)}", ERROR_INTERNAL_SERVER_ERROR)
         except Exception as e:
             logger.error(f"Failed to update Order Service webhook at {order_webhook_url}: {str(e)}")
             raise InternalServerError(f"Order Service status propagation failed for URL '{order_webhook_url}': {str(e)}", ERROR_INTERNAL_SERVER_ERROR)

@@ -7,18 +7,36 @@ export const apiClient = axios.create({
   },
 });
 
+// Cache the token fetch promise to prevent parallel Cognito requests causing 400 Bad Request
+let tokenFetchPromise: Promise<string | undefined> | null = null;
+
+const getAuthToken = async () => {
+  if (tokenFetchPromise) {
+    return tokenFetchPromise;
+  }
+  
+  tokenFetchPromise = (async () => {
+    try {
+      const session = await fetchAuthSession();
+      return session.tokens?.idToken?.toString();
+    } catch (error) {
+      console.warn('No active session or failed to fetch token', error);
+      return undefined;
+    } finally {
+      // Clear the promise so next time we fetch a fresh one
+      tokenFetchPromise = null;
+    }
+  })();
+  
+  return tokenFetchPromise;
+};
+
 // Request interceptor to attach Cognito JWT token
 apiClient.interceptors.request.use(
   async (config) => {
-    try {
-      const session = await fetchAuthSession();
-      const token = session.tokens?.idToken?.toString();
-      
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch (error) {
-      console.warn('No active session or failed to fetch token', error);
+    const token = await getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },

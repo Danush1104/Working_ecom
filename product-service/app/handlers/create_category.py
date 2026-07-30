@@ -17,9 +17,20 @@ def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         raise ValidationError("Category name is required", "MISSING_NAME")
 
     description = body.get("description", "")
+    icon_url = body.get("icon_url", "")
+    banner_url = body.get("banner_url", "")
+    display_order = int(body.get("display_order", 0))
+    featured = bool(body.get("featured", False))
     
     service = CategoryService()
-    category = service.create_category(name=name, description=description)
+    category = service.create_category(
+        name=name, 
+        description=description,
+        icon_url=icon_url,
+        banner_url=banner_url,
+        display_order=display_order,
+        featured=featured
+    )
     
     return build_response(201, {
         "success": True,

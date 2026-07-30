@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { ShoppingCart, AlertCircle, Loader2 } from 'lucide-react';
 import { useAdminCarts } from '../../hooks/useCart';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { FilterBar } from '../../components/admin/FilterBar';
 import { Pagination } from '../../components/ui/Pagination';
+import { DataTable } from '../../components/admin/DataTable';
+import { DetailDrawer } from '../../components/admin/DetailDrawer';
 
 export default function Carts() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
+  const [selectedCart, setSelectedCart] = useState<any | null>(null);
   
   const { data: rawCarts, isLoading, isError } = useAdminCarts();
 
@@ -60,13 +62,45 @@ export default function Carts() {
   const totalPages = Math.ceil(aggregatedCarts.length / itemsPerPage);
   const paginatedCarts = aggregatedCarts.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
+  const columns = [
+    {
+      header: 'User ID',
+      accessor: (item: any) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+              {item.user_id.substring(0, 2).toUpperCase()}
+            </span>
+          </div>
+          <span className="font-mono text-gray-900 dark:text-white" title={item.user_id}>
+            {item.user_id.length > 15 ? `${item.user_id.substring(0, 15)}...` : item.user_id}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: 'Product Count',
+      accessor: (item: any) => <span className="text-gray-900 dark:text-white">{item.numProducts}</span>
+    },
+    {
+      header: 'Total Quantity',
+      accessor: (item: any) => <span className="text-gray-900 dark:text-white">{item.totalQuantity}</span>
+    },
+    {
+      header: 'Updated At',
+      accessor: (item: any) => <span className="text-gray-500 dark:text-gray-400">{new Date(item.lastUpdated).toLocaleDateString()}</span>
+    }
+  ];
+
   if (!aggregatedCarts.length) {
     return (
-      <EmptyState
-        icon={ShoppingCart}
-        title="No Active Carts"
-        description="There are currently no carts in the system."
-      />
+      <div className="bg-bg-card/40 backdrop-blur-xl rounded-3xl p-16 shadow-soft border border-border-subtle">
+        <EmptyState
+          icon={ShoppingCart}
+          title="No Active Carts"
+          description="There are currently no carts in the system."
+        />
+      </div>
     );
   }
 
@@ -82,54 +116,12 @@ export default function Carts() {
         onSearch={(val) => { setSearch(val); setPage(1); }} 
       />
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
-            <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
-              <tr>
-                <th className="px-6 py-4 font-semibold">User ID</th>
-                <th className="px-6 py-4 font-semibold">Product Count</th>
-                <th className="px-6 py-4 font-semibold">Total Quantity</th>
-                <th className="px-6 py-4 font-semibold">Updated At</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-              {paginatedCarts.map((cart: any) => (
-                <motion.tr 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  key={cart.user_id} 
-                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                          {cart.user_id.substring(0, 2).toUpperCase()}
-                        </span>
-                      </div>
-                      <span className="font-mono text-gray-900 dark:text-white" title={cart.user_id}>
-                        {cart.user_id.length > 8 ? `${cart.user_id.substring(0, 8)}...` : cart.user_id}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-gray-900 dark:text-white">{cart.numProducts}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-gray-900 dark:text-white">{cart.totalQuantity}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-gray-500 dark:text-gray-400">
-                      {new Date(cart.lastUpdated).toLocaleDateString()}
-                    </span>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable 
+        columns={columns} 
+        data={paginatedCarts} 
+        keyExtractor={(item: any) => item.user_id}
+        onRowClick={(item) => setSelectedCart(item)}
+      />
 
       {totalPages > 1 && (
         <div className="flex justify-end">
@@ -140,6 +132,18 @@ export default function Carts() {
           />
         </div>
       )}
+
+      <DetailDrawer 
+        isOpen={!!selectedCart} 
+        onClose={() => setSelectedCart(null)} 
+        title="Cart Details"
+        fields={selectedCart ? [
+          { label: 'User ID', value: selectedCart.user_id },
+          { label: 'Product Count', value: selectedCart.numProducts },
+          { label: 'Total Quantity', value: selectedCart.totalQuantity },
+          { label: 'Updated At', value: new Date(selectedCart.lastUpdated).toLocaleString() }
+        ] : []}
+      />
     </div>
   );
 }

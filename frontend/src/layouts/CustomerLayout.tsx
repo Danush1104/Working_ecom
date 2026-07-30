@@ -1,10 +1,11 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, User, Home, Grid, Heart, Bell, Sun, Moon, Settings, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useCart } from '../hooks/useCart';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../context/WishlistContext';
 import { ScrollToTop } from '../components/ui/ScrollToTop';
 import { Suspense } from 'react';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -24,9 +25,12 @@ const PageSkeleton = () => (
 export default function CustomerLayout() {
   const { isDarkMode, toggleTheme } = useTheme();
   const { logout, user } = useAuth();
+  const navigate = useNavigate();
   
   const { data: cart } = useCart(user?.userId);
   const totalItems = cart?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  
+  const { totalItems: wishlistCount } = useWishlist();
   
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -62,10 +66,10 @@ export default function CustomerLayout() {
     <div className="min-h-screen bg-gray-50 dark:bg-bg-primary flex flex-col transition-colors duration-200">
       <ScrollToTop />
       {/* Desktop Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-border-subtle bg-white/80 dark:bg-bg-primary/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/5 bg-white/80 dark:bg-transparent backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-8">
-            <Link to="/" className="text-2xl font-playfair font-bold tracking-tight text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary rounded-lg">
+            <Link to="/" className="text-2xl font-playfair font-bold tracking-tight text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded-lg">
               STOREFRONT
             </Link>
             <nav className="hidden md:flex gap-6">
@@ -84,10 +88,14 @@ export default function CustomerLayout() {
               <input id="input_eyrm"  
                 type="text" 
                 placeholder="Search products..."
-                onChange={(e) => {
-                  const val = e.target.value.trim();
-                  if (val) {
-                    window.location.href = `/products?q=${encodeURIComponent(val)}`;
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const val = e.currentTarget.value.trim();
+                    if (val) {
+                      navigate(`/products?q=${encodeURIComponent(val)}`);
+                    } else {
+                      navigate('/products');
+                    }
                   }
                 }}
                 className="h-10 w-64 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 pl-10 pr-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all dark:text-white placeholder:text-gray-400"
@@ -178,11 +186,19 @@ export default function CustomerLayout() {
                 )}
               </AnimatePresence>
             </div>
-            
-            <Link to="/cart" aria-label="Shopping Cart" className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white dark:text-white dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary rounded-full">
-              <ShoppingCart className="h-5 w-5" />
+            <Link to="/wishlist" aria-label="Wishlist" className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-primary rounded-full transition-colors group">
+              <Heart className={`h-5 w-5 transition-all duration-300 group-hover:scale-110 ${wishlistCount > 0 ? 'fill-red-500 text-red-500 group-hover:fill-red-500' : 'group-hover:fill-current'}`} />
+              {wishlistCount > 0 && (
+                <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                </span>
+              )}
+            </Link>
+
+            <Link to="/cart" aria-label="Shopping Cart" className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white dark:text-white dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary rounded-full group">
+              <ShoppingCart className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
               {totalItems > 0 && (
-                <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+                <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-500 text-[10px] font-bold text-white">
                   {totalItems > 99 ? '99+' : totalItems}
                 </span>
               )}

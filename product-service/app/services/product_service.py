@@ -13,10 +13,12 @@ from app.constants import (
     ERROR_PRODUCT_NOT_FOUND
 )
 from app.logger import logger
+from app.services.category_service import CategoryService
 
 class ProductService:
     def __init__(self):
         self.repository = ProductRepository()
+        self.category_service = CategoryService()
 
     def create_product(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -42,12 +44,17 @@ class ProductService:
             created_at=now,
             updated_at=now,
             image_url=data.get("image_url"),
+            images=data.get("images", []),
             is_featured=bool(data.get("is_featured", False))
         )
 
         try:
             self.repository.create_product(product)
             logger.info(f"Product created: product_id={product_id}, price={product.price}")
+            
+            # Increment product count for the category
+            self.category_service.adjust_product_count_by_name(product.category, 1)
+            
             return product.to_dict()
         except ClientError as e:
             if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
@@ -88,12 +95,20 @@ class ProductService:
         }
         if "image_url" in data:
             update_fields["image_url"] = data["image_url"]
+        if "images" in data:
+            update_fields["images"] = data["images"]
         if "is_featured" in data:
             update_fields["is_featured"] = bool(data["is_featured"])
 
         try:
             self.repository.update_product(product_id, update_fields)
             logger.info(f"Product updated fully: product_id={product_id}")
+            
+            # If category changed, adjust counts
+            if existing.category != update_fields["category"]:
+                self.category_service.adjust_product_count_by_name(existing.category, -1)
+                self.category_service.adjust_product_count_by_name(update_fields["category"], 1)
+                
             # Retrieve updated item to return
             updated_product = self.repository.get_product(product_id)
             return updated_product.to_dict() if updated_product else {}
@@ -124,12 +139,20 @@ class ProductService:
             update_fields["price"] = Decimal(str(data["price"]))
         if "image_url" in data:
             update_fields["image_url"] = data["image_url"]
+        if "images" in data:
+            update_fields["images"] = data["images"]
         if "is_featured" in data:
             update_fields["is_featured"] = bool(data["is_featured"])
 
         try:
             self.repository.update_product(product_id, update_fields)
             logger.info(f"Product updated partially: product_id={product_id}")
+            
+            # If category changed, adjust counts
+            if "category" in update_fields and existing.category != update_fields["category"]:
+                self.category_service.adjust_product_count_by_name(existing.category, -1)
+                self.category_service.adjust_product_count_by_name(update_fields["category"], 1)
+                
             updated_product = self.repository.get_product(product_id)
             return updated_product.to_dict() if updated_product else {}
         except ClientError as e:
@@ -147,6 +170,10 @@ class ProductService:
         try:
             self.repository.delete_product(product_id, now)
             logger.info(f"Product soft-deleted: product_id={product_id}")
+            
+            # Decrement product count
+            self.category_service.adjust_product_count_by_name(existing.category, -1)
+            
         except ClientError as e:
             if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
                 raise NotFoundError(f"Product with ID {product_id} not found", ERROR_PRODUCT_NOT_FOUND)

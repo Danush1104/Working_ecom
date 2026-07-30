@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, AlertCircle, ShoppingBag } from 'lucide-react';
+import { AlertCircle, ShoppingBag } from 'lucide-react';
 import { DataTable } from '../../components/admin/DataTable';
 import { FilterBar } from '../../components/admin/FilterBar';
 import { FilterDrawer } from '../../components/admin/FilterDrawer';
@@ -9,11 +9,12 @@ import { useAdminOrders } from '../../hooks/useOrders';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import type { Order } from '../../api/orderService';
-import { ViewModal } from '../../components/ui/ViewModal';
+import { DetailDrawer } from '../../components/admin/DetailDrawer';
 
 import { formatCurrency } from '../../utils/currency';
 import { safeFormatDate } from '../../utils/date';
 import { Pagination } from '../../components/ui/Pagination';
+import { exportToCSV } from '../../utils/csv';
 
 export default function Orders() {
   const { data: orders, isLoading, isError } = useAdminOrders();
@@ -46,14 +47,22 @@ export default function Orders() {
   const columns: any[] = [
     { 
       header: 'Order ID', 
-      accessor: (item: Order) => <span className="font-medium text-gray-900 dark:text-white">{item.order_id}</span> 
+      accessor: (item: Order) => (
+        <span className="font-medium text-gray-900 dark:text-white" title={item.order_id}>
+          {item.order_id.length > 13 ? `${item.order_id.slice(0, 13)}...` : item.order_id}
+        </span>
+      ) 
     },
     {
       header: 'Customer',
       accessor: (item: Order) => (
         <div className="flex flex-col">
-          <span className="font-medium text-gray-900 dark:text-white">{item.user_id}</span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">{item.customer_email}</span>
+          <span className="font-medium text-gray-900 dark:text-white" title={(item as any).customer_username || item.user_id}>
+            {((item as any).customer_username || item.user_id).length > 15 ? `${((item as any).customer_username || item.user_id).slice(0, 15)}...` : ((item as any).customer_username || item.user_id)}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px]" title={item.customer_email}>
+            {item.customer_email}
+          </span>
         </div>
       )
     },
@@ -79,18 +88,7 @@ export default function Orders() {
     {
       header: 'Actions',
       className: 'text-right',
-      accessor: (item: Order) => (
-        <button 
-          onClick={() => {
-            setSelectedOrder(item);
-            setIsViewModalOpen(true);
-          }}
-          className="p-1.5 text-gray-400 hover:text-primary transition-colors"
-          title="View Details"
-        >
-          <Eye className="h-4 w-4" />
-        </button>
-      )
+      accessor: () => null
     }
   ];
 
@@ -101,7 +99,7 @@ export default function Orders() {
           <Skeleton className="h-8 w-32" />
         </div>
         <FilterBar placeholder="Search orders by ID, email or name..." />
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
+        <div className="bg-bg-card/40 backdrop-blur-xl rounded-3xl p-6 shadow-soft border border-border-subtle space-y-4">
           <Skeleton className="h-10 w-full" />
           {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
         </div>
@@ -129,6 +127,7 @@ export default function Orders() {
         placeholder="Search orders (ID, User, Email)..." 
         onSearch={(val) => { setSearch(val); setPage(1); }}
         onFilterClick={() => setIsFilterOpen(true)}
+        onDownload={() => exportToCSV(processedOrders, 'orders.csv')}
       />
 
       <FilterDrawer
@@ -154,7 +153,7 @@ export default function Orders() {
       </FilterDrawer>
 
       {!orders || orders.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-16 shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="bg-bg-card/40 backdrop-blur-xl rounded-3xl p-16 shadow-soft border border-border-subtle">
           <EmptyState 
             icon={ShoppingBag}
             title="No orders found"
@@ -162,7 +161,7 @@ export default function Orders() {
           />
         </div>
       ) : processedOrders.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-16 shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="bg-bg-card/40 backdrop-blur-xl rounded-3xl p-16 shadow-soft border border-border-subtle">
           <EmptyState 
             icon={ShoppingBag}
             title="No matches found"
@@ -171,7 +170,15 @@ export default function Orders() {
         </div>
       ) : (
         <>
-          <DataTable columns={columns} data={paginatedOrders} keyExtractor={(item: Order) => item.order_id} />
+          <DataTable 
+            columns={columns} 
+            data={paginatedOrders} 
+            keyExtractor={(item: Order) => item.order_id} 
+            onRowClick={(item) => {
+              setSelectedOrder(item);
+              setIsViewModalOpen(true);
+            }}
+          />
           
           {totalPages > 1 && (
             <div className="mt-6 flex justify-end">
@@ -185,38 +192,32 @@ export default function Orders() {
         </>
       )}
 
-      <ViewModal
+      <DetailDrawer
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         title="Order Details"
         fields={selectedOrder ? [
           { label: 'Order ID', value: selectedOrder.order_id },
+          { label: 'Customer', value: (selectedOrder as any).customer_username || selectedOrder.user_id },
           { label: 'User ID', value: selectedOrder.user_id },
           { label: 'Customer Email', value: selectedOrder.customer_email || 'N/A' },
           { label: 'Total Amount', value: formatCurrency(selectedOrder.total_amount) },
           { label: 'Order Status', value: selectedOrder.order_status },
           { label: 'Payment Status', value: selectedOrder.payment_status },
           { label: 'Created At', value: new Date(selectedOrder.created_at.replace(' ', 'T')).toLocaleString() },
-          { label: 'Shipping Address', value: selectedOrder.shipping_address ? (
-            <div className="text-sm">
-              <p>{selectedOrder.shipping_address.name}</p>
-              <p>{selectedOrder.shipping_address.street}</p>
-              <p>{selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.state} {selectedOrder.shipping_address.zip_code}</p>
-            </div>
-          ) : 'N/A', fullWidth: true },
           { label: 'Items', value: selectedOrder.items ? (
             <div className="space-y-2 mt-2">
               {selectedOrder.items.map((item, idx) => (
                 <div key={idx} className="flex justify-between items-center text-sm p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div>
-                    <p className="font-medium">{item.name || item.product_id}</p>
+                    <p className="font-medium">{item.product_name || item.product_id}</p>
                     <p className="text-gray-500">Qty: {item.quantity}</p>
                   </div>
                   <p className="font-semibold">{formatCurrency(item.price)}</p>
                 </div>
               ))}
             </div>
-          ) : 'N/A', fullWidth: true }
+          ) : 'N/A' }
         ] : []}
       />
     </motion.div>

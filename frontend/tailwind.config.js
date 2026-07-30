@@ -18,16 +18,16 @@ export default {
           hover: '#4F8CFF',
         },
         bg: {
-          primary: '#090B12',
-          secondary: '#111827',
-          card: '#151A25',
+          primary: 'var(--bg-primary)',
+          secondary: 'var(--bg-secondary)',
+          card: 'var(--bg-card)',
         },
         text: {
-          primary: '#FFFFFF',
-          secondary: '#B8C1D1',
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
         },
         border: {
-          subtle: 'rgba(255,255,255,0.08)',
+          subtle: 'var(--border-subtle)',
         },
         gray: {
           50: '#f9fafb',

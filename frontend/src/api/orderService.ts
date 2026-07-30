@@ -26,6 +26,7 @@ export interface Order {
 export interface CheckoutPayload {
   payment_method: string;
   customer_email: string;
+  customer_username?: string;
 }
 
 export const orderService = {

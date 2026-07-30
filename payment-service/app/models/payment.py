@@ -12,6 +12,8 @@ class Payment:
     payment_status: str
     created_at: str
     updated_at: str
+    customer_username: str | None = None
+    customer_email: str | None = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Converts the Payment instance to a dictionary for DynamoDB storage."""
@@ -32,5 +34,7 @@ class Payment:
             payment_method=data["payment_method"],
             payment_status=data["payment_status"],
             created_at=data["created_at"],
-            updated_at=data["updated_at"]
+            updated_at=data["updated_at"],
+            customer_username=data.get("customer_username"),
+            customer_email=data.get("customer_email")
         )

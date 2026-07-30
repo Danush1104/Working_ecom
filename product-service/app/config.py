@@ -1,8 +1,10 @@
 import os
-from dotenv import load_dotenv
-
-# Load .env file for local development
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    # Load .env file for local development
+    load_dotenv()
+except ImportError:
+    pass
 
 class Config:
     AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-1")

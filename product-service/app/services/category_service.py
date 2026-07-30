@@ -10,8 +10,15 @@ class CategoryService:
         self.category_repo = CategoryRepository()
         self.product_repo = ProductRepository()
 
-    def create_category(self, name: str, description: str = "") -> Category:
-        category = Category(name=name, description=description)
+    def create_category(self, name: str, description: str = "", icon_url: str = "", banner_url: str = "", display_order: int = 0, featured: bool = False) -> Category:
+        category = Category(
+            name=name, 
+            description=description,
+            icon_url=icon_url,
+            banner_url=banner_url,
+            display_order=display_order,
+            featured=featured
+        )
         try:
             self.category_repo.create_category(category)
             return category
@@ -31,16 +38,28 @@ class CategoryService:
         existing_names = {c.name for c in categories}
         
         default_categories = [
-            "Audio", "PC & Accessories", "Mobiles", "Home Appliances", 
-            "Gaming", "Cameras", "Laptops", "Wearables", 
-            "Beauty Products", "Electronics"
+            {"name": "Audio", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Audio"},
+            {"name": "PC & Accessories", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=PC"},
+            {"name": "Mobiles", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Mobiles"},
+            {"name": "Home Appliances", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Home"},
+            {"name": "Gaming", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Gaming"},
+            {"name": "Cameras", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Camera"},
+            {"name": "Laptops", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Laptops"},
+            {"name": "Wearables", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Watch"},
+            {"name": "Beauty Products", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Beauty"},
+            {"name": "Electronics", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Tech"}
         ]
         
         added_new = False
-        for cat_name in default_categories:
-            if cat_name not in existing_names:
+        for idx, cat in enumerate(default_categories):
+            if cat["name"] not in existing_names:
                 try:
-                    self.create_category(name=cat_name, description=f"Default category: {cat_name}")
+                    self.create_category(
+                        name=cat["name"], 
+                        description=f"Default category: {cat['name']}",
+                        icon_url=cat["icon"],
+                        display_order=idx + 1
+                    )
                     added_new = True
                 except ConflictError:
                     pass
@@ -52,7 +71,7 @@ class CategoryService:
     def update_category(self, category_id: str, updates: Dict[str, Any]) -> Category:
         self.get_category(category_id)  # Validate exists
         
-        valid_fields = ["name", "description"]
+        valid_fields = ["name", "description", "icon_url", "banner_url", "display_order", "featured"]
         update_fields = {k: v for k, v in updates.items() if k in valid_fields}
         
         if update_fields:
@@ -81,3 +100,16 @@ class CategoryService:
             if type(e).__name__ == "ConditionalCheckFailedException":
                 raise NotFoundError("Category not found or already inactive", "CATEGORY_NOT_FOUND")
             raise e
+
+    def adjust_product_count_by_name(self, category_name: str, increment: int) -> None:
+        """Finds the category by name and updates its product_count atomically."""
+        if not category_name or increment == 0:
+            return
+            
+        categories = self.category_repo.list_categories()
+        matching = [c for c in categories if c.name.lower() == category_name.lower()]
+        if matching:
+            try:
+                self.category_repo.update_product_count(matching[0].category_id, increment)
+            except Exception as e:
+                pass # Fail silently as it's a background denormalized count

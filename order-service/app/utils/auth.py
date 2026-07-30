@@ -66,6 +66,7 @@ def require_self_or_admin(event: Dict[str, Any], target_user_id: str) -> None:
     custom_role = str(claims.get("custom:role", "")).upper()
     if "ADMIN" in groups or custom_role == "ADMIN":
         return
-    user_id = get_user_id(event)
-    if user_id != target_user_id:
+    user_id_sub = claims.get("sub")
+    cognito_username = claims.get("cognito:username")
+    if target_user_id != user_id_sub and target_user_id != cognito_username:
         raise ForbiddenError("Access denied to another user's resource")

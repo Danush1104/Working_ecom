@@ -52,6 +52,7 @@ export default function Checkout() {
     
     const payload: CheckoutPayload = {
       customer_email: email,
+      customer_username: user?.username,
       payment_method: paymentMethod,
     };
     

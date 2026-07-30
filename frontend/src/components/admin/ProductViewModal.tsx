@@ -89,8 +89,8 @@ export function ProductViewModal({ isOpen, onClose, product }: ProductViewModalP
                     <div>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1.5"><Star className="h-3.5 w-3.5" /> Rating</p>
                       <div className="flex items-center gap-1">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">{product.rating || 0}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">({product.reviews_count || 0})</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{product.average_rating?.toFixed(1) || '0.0'}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">({product.total_reviews || 0})</span>
                       </div>
                     </div>
                   </div>

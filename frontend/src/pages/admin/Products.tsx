@@ -13,6 +13,7 @@ import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useP
 import type { Product } from '../../api/productService';
 import { formatCurrency } from '../../utils/currency';
 import { Pagination } from '../../components/ui/Pagination';
+import { exportToCSV } from '../../utils/csv';
 
 export default function Products() {
   const { data: products, isLoading, isError } = useProducts();
@@ -152,6 +153,7 @@ export default function Products() {
         onSearch={(val) => { setSearch(val); setPage(1); }}
         onFilterClick={() => setIsFilterOpen(true)}
         onAdd={handleAdd} 
+        onDownload={() => exportToCSV(processedProducts, 'products.csv')}
         addLabel="Add Product" 
       />
 

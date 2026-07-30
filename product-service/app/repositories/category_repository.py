@@ -91,3 +91,15 @@ class CategoryRepository:
                 raise e
             logger.error(f"Failed to delete category: {str(e)}")
             raise DatabaseError(f"Database error during category deletion: {str(e)}")
+
+    def update_product_count(self, category_id: str, increment: int) -> None:
+        try:
+            self.table.update_item(
+                Key={"product_id": category_id},
+                UpdateExpression="ADD product_count :inc",
+                ExpressionAttributeValues={":inc": increment, ":etype": "CATEGORY"},
+                ConditionExpression="attribute_exists(product_id) AND entity_type = :etype"
+            )
+        except ClientError as e:
+            logger.error(f"Failed to update product count: {str(e)}")
+            raise DatabaseError(f"Database error during product count update: {str(e)}")

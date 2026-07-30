@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, AlertCircle, Plus, Eye } from 'lucide-react';
+import { Loader2, AlertCircle, Plus } from 'lucide-react';
 import { DataTable } from '../../components/admin/DataTable';
-import { ViewModal } from '../../components/ui/ViewModal';
+import { DetailDrawer } from '../../components/admin/DetailDrawer';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { UpdateStockModal } from '../../components/admin/UpdateStockModal';
 import { useInventory, useCreateInventory, useUpdateStock, useRestoreStock, useDeductStock } from '../../hooks/useInventory';
@@ -10,6 +10,7 @@ import { useProducts } from '../../hooks/useProducts';
 import { FilterBar } from '../../components/admin/FilterBar';
 import { FilterDrawer } from '../../components/admin/FilterDrawer';
 import { Pagination } from '../../components/ui/Pagination';
+import { exportToCSV } from '../../utils/csv';
 
 export default function Inventory() {
   const { data: inventoryData, isLoading: isLoadingInv, isError: isErrorInv } = useInventory();
@@ -125,8 +126,12 @@ export default function Inventory() {
       header: 'Product',
       accessor: (item: any) => (
         <div className="flex flex-col">
-          <span className="font-medium text-gray-900 dark:text-white">{item.name}</span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">{item.product_id}</span>
+          <span className="font-medium text-gray-900 dark:text-white" title={item.name}>
+            {item.name.length > 25 ? `${item.name.slice(0, 25)}...` : item.name}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-mono" title={item.product_id}>
+            {item.product_id.length > 13 ? `${item.product_id.slice(0, 13)}...` : item.product_id}
+          </span>
         </div>
       )
     },
@@ -167,17 +172,7 @@ export default function Inventory() {
       className: 'text-right',
       accessor: (item: any) => (
         item.has_inventory ? (
-          <div className="flex items-center justify-end gap-2">
-            <button 
-              onClick={() => {
-                setSelectedItem(item);
-                setIsViewModalOpen(true);
-              }}
-              className="p-1.5 text-gray-400 hover:text-primary transition-colors"
-              title="View Details"
-            >
-              <Eye className="h-4 w-4" />
-            </button>
+          <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
             <button 
               onClick={() => handleUpdateClick(item, 'restore')}
               className="px-3 py-1.5 text-xs font-medium bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
@@ -198,17 +193,7 @@ export default function Inventory() {
             </button>
           </div>
         ) : (
-          <div className="flex items-center justify-end gap-2">
-            <button 
-              onClick={() => {
-                setSelectedItem(item);
-                setIsViewModalOpen(true);
-              }}
-              className="p-1.5 text-gray-400 hover:text-primary transition-colors"
-              title="View Details"
-            >
-              <Eye className="h-4 w-4" />
-            </button>
+          <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
             <button 
               onClick={() => handleInitializeClick(item)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
@@ -228,13 +213,12 @@ export default function Inventory() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Inventory</h1>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <FilterBar 
-          placeholder="Search by product name, ID or category..." 
-          onSearch={(val) => { setSearch(val); setPage(1); }} 
-          onFilterClick={() => setIsFilterOpen(true)}
-        />
-      </div>
+      <FilterBar 
+        placeholder="Search by product name, ID or category..." 
+        onSearch={(val) => { setSearch(val); setPage(1); }} 
+        onFilterClick={() => setIsFilterOpen(true)}
+        onDownload={() => exportToCSV(processedInventory, 'inventory.csv')}
+      />
 
       <FilterDrawer
         isOpen={isFilterOpen}
@@ -274,6 +258,10 @@ export default function Inventory() {
             columns={columns} 
             data={paginatedInventory} 
             keyExtractor={(item) => item.product_id} 
+            onRowClick={(item) => {
+              setSelectedItem(item);
+              setIsViewModalOpen(true);
+            }}
           />
           {totalPages > 1 && (
             <div className="mt-6 flex justify-end">
@@ -297,7 +285,7 @@ export default function Inventory() {
         mode={modalMode}
       />
 
-      <ViewModal
+      <DetailDrawer
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         title="Inventory Details"
