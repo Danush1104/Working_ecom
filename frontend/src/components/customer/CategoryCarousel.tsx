@@ -48,81 +48,77 @@ export function CategoryCarousel({ categories, activeCategory, onCategorySelect 
  const displayCategories = [allCategoryItem, ...deduplicatedCategories].sort((a, b) => (a.display_order || 99) - (b.display_order || 99));
 
  return (
- <div className="relative group w-full py-4">
- {/* Left Gradient & Arrow */}
- <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-bg-primary via-bg-primary/80 to-transparent z-10 flex items-center pointer-events-none">
- <button 
- onClick={(e) => { e.stopPropagation(); scroll('left'); }}
- className="ml-2 w-10 h-10 rounded-full bg-bg-card/5 backdrop-blur-md border border-border-subtle flex items-center justify-center text-text-primary hover:bg-bg-card/10 hover:border-primary/50 transition-all pointer-events-auto opacity-0 group-hover:opacity-100 shadow-[0_0_15px_rgba(34,211,238,0.2)]"
- >
- <ChevronLeft className="w-5 h-5" />
- </button>
- </div>
+  <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+  <div className="relative group w-full bg-bg-card rounded-[2rem] border border-border-subtle shadow-sm flex items-center p-2">
+  {/* Left Gradient & Arrow */}
+  <div className="absolute left-2 top-2 bottom-2 w-16 bg-gradient-to-r from-bg-card via-bg-card/80 to-transparent z-10 flex items-center pointer-events-none rounded-l-[1.8rem]">
+  <button 
+  onClick={(e) => { e.stopPropagation(); scroll('left'); }}
+  className="ml-2 w-8 h-8 rounded-full bg-bg-primary shadow-sm border border-border-subtle flex items-center justify-center text-text-primary hover:text-cyan-500 transition-all pointer-events-auto opacity-0 group-hover:opacity-100"
+  >
+  <ChevronLeft className="w-4 h-4" />
+  </button>
+  </div>
 
- {/* Scrollable Container */}
- <div 
- ref={scrollContainerRef}
- className="flex items-center gap-4 overflow-x-auto scrollbar-hide px-4 md:px-12 scroll-smooth"
- style={{ scrollbarWidth: 'none', msOverflowStyle: 'none'}}
- >
- {displayCategories.map((cat) => {
- const isActive = activeCategory === cat.name;
- return (
- <button
- key={cat.id || cat.name}
- onClick={() => onCategorySelect(cat.name)}
- className={`relative flex flex-col items-center gap-3 min-w-[100px] shrink-0 p-3 rounded-2xl transition-all duration-300 focus:outline-none ${
- isActive 
- ? 'bg-bg-card/5 border border-primary/30 shadow-[0_0_20px_rgba(21,216,255,0.15)] scale-105'
- : 'bg-transparent border border-transparent hover:bg-bg-card/5 hover:border-border-subtle'
- }`}
- >
- {isActive && (
- <motion.div
- layoutId="activeCategoryGlow"
- className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/10 to-transparent -z-10"
- initial={false}
- transition={{ type:"spring", stiffness: 300, damping: 30 }}
- />
- )}
- 
- <div className={`w-16 h-16 rounded-full overflow-hidden p-0.5 transition-all duration-300 ${
- isActive ? 'bg-gradient-to-tr from-primary to-purple-500 shadow-[0_0_15px_rgba(21,216,255,0.4)]': 'bg-bg-card/10 group-hover:bg-bg-card/20'
- }`}>
- <div className="w-full h-full rounded-full overflow-hidden bg-bg-card flex items-center justify-center">
- {cat.icon_url ? (
- <img 
- src={cat.icon_url} 
- alt={cat.name}
- className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
- />
- ) : (
- <ShoppingBag className={`w-6 h-6 ${isActive ? 'text-cyan-400': 'text-text-secondary'} group-hover:scale-110 transition-transform duration-500`} />
- )}
- </div>
- </div>
- 
- <div className="text-center">
- <p className={`text-sm font-space font-semibold transition-colors ${
- isActive ? 'text-primary': 'text-text-secondary hover:text-text-primary'
- }`}>
- {cat.name}
- </p>
- </div>
- </button>
- );
- })}
- </div>
+  {/* Scrollable Container */}
+  <div 
+  ref={scrollContainerRef}
+  className="flex items-center justify-start sm:justify-center flex-1 gap-6 sm:gap-10 overflow-x-auto scrollbar-hide px-8 scroll-smooth"
+  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none'}}
+  >
+  {displayCategories.map((cat) => {
+  const isActive = activeCategory === cat.name;
+  return (
+  <button
+  key={cat.id || cat.name}
+  onClick={() => onCategorySelect(cat.name)}
+  className={`relative flex flex-col items-center gap-2 min-w-[70px] shrink-0 pt-2 pb-3 transition-all duration-300 focus:outline-none group`}
+  >
+  <div className="w-14 h-14 rounded-full overflow-hidden transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
+  {cat.icon_url ? (
+  <img 
+  src={cat.icon_url} 
+  alt={cat.name}
+  className="w-full h-full object-cover"
+  />
+  ) : (
+  <div className="w-full h-full bg-bg-secondary flex items-center justify-center">
+  <ShoppingBag className={`w-5 h-5 ${isActive ? 'text-cyan-500': 'text-text-secondary'}`} />
+  </div>
+  )}
+  </div>
+  
+  <div className="text-center relative">
+  <p className={`text-xs font-semibold whitespace-nowrap transition-colors ${
+  isActive ? 'text-cyan-500': 'text-text-secondary group-hover:text-text-primary'
+  }`}>
+  {cat.name}
+  </p>
+  {/* Active Cyan Underline */}
+  {isActive && (
+  <motion.div
+  layoutId="activeCategoryUnderline"
+  className="absolute -bottom-3 left-1/2 -translate-x-1/2 h-[3px] w-full bg-cyan-500 rounded-t-full"
+  initial={false}
+  transition={{ type:"spring", stiffness: 300, damping: 30 }}
+  />
+  )}
+  </div>
+  </button>
+  );
+  })}
+  </div>
 
- {/* Right Gradient & Arrow */}
- <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-bg-primary via-bg-primary/80 to-transparent z-10 flex items-center justify-end pointer-events-none">
- <button 
- onClick={(e) => { e.stopPropagation(); scroll('right'); }}
- className="mr-2 w-10 h-10 rounded-full bg-bg-card/5 backdrop-blur-md border border-border-subtle flex items-center justify-center text-text-primary hover:bg-bg-card/10 hover:border-primary/50 transition-all pointer-events-auto opacity-0 group-hover:opacity-100 shadow-[0_0_15px_rgba(34,211,238,0.2)]"
- >
- <ChevronRight className="w-5 h-5" />
- </button>
- </div>
- </div>
- );
+  {/* Right Gradient & Arrow */}
+  <div className="absolute right-2 top-2 bottom-2 w-16 bg-gradient-to-l from-bg-card via-bg-card/80 to-transparent z-10 flex items-center justify-end pointer-events-none rounded-r-[1.8rem]">
+  <button 
+  onClick={(e) => { e.stopPropagation(); scroll('right'); }}
+  className="mr-2 w-8 h-8 rounded-full bg-bg-primary shadow-sm border border-border-subtle flex items-center justify-center text-text-primary hover:text-cyan-500 transition-all pointer-events-auto opacity-0 group-hover:opacity-100"
+  >
+  <ChevronRight className="w-4 h-4" />
+  </button>
+  </div>
+  </div>
+  </div>
+  );
 }

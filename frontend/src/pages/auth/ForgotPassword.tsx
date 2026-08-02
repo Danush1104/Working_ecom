@@ -45,7 +45,13 @@ export default function ForgotPassword() {
  setStep('reset');
  toast.success('Check your email for the reset code');
  } catch (error: any) {
+ if (error.name === 'UserNotFoundException') {
+ toast.error('No account found with this email');
+ } else if (error.name === 'LimitExceededException') {
+ toast.error('Too many attempts. Please try again later.');
+ } else {
  toast.error(error.message || 'Failed to request reset');
+ }
  } finally {
  setIsSubmitting(false);
  }
@@ -62,7 +68,15 @@ export default function ForgotPassword() {
  toast.success('Password reset successfully! Please log in.');
  navigate('/login');
  } catch (error: any) {
+ if (error.name === 'CodeMismatchException') {
+ toast.error('Invalid verification code');
+ } else if (error.name === 'ExpiredCodeException') {
+ toast.error('Verification code expired');
+ } else if (error.name === 'InvalidPasswordException') {
+ toast.error('Password does not meet requirements');
+ } else {
  toast.error(error.message || 'Failed to reset password');
+ }
  } finally {
  setIsSubmitting(false);
  }

@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Lock, Save, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { updateUserAttributes, updatePassword } from 'aws-amplify/auth';
+import { updateUserAttributes, updatePassword, fetchUserAttributes } from 'aws-amplify/auth';
 import toast from 'react-hot-toast';
 
 export default function Settings() {
  const { user, checkAuth } = useAuth();
  
  const [name, setName] = useState(user?.displayName || '');
- const [phoneNumber, setPhoneNumber] = useState(''); // Need to fetch phone number if available
+ const [phoneNumber, setPhoneNumber] = useState('');
  
  const [oldPassword, setOldPassword] = useState('');
  const [newPassword, setNewPassword] = useState('');
@@ -17,6 +17,19 @@ export default function Settings() {
 
  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
  const [isLoadingPassword, setIsLoadingPassword] = useState(false);
+
+ useEffect(() => {
+   async function loadAttributes() {
+     try {
+       const attrs = await fetchUserAttributes();
+       if (attrs.phone_number) setPhoneNumber(attrs.phone_number);
+       if (attrs.name) setName(attrs.name);
+     } catch (error) {
+       console.error('Failed to load user attributes', error);
+     }
+   }
+   loadAttributes();
+ }, []);
 
  const handleUpdateProfile = async (e: React.FormEvent) => {
  e.preventDefault();
@@ -60,7 +73,13 @@ export default function Settings() {
  setConfirmPassword('');
  toast.success('Password updated successfully');
  } catch (error: any) {
+ if (error.name === 'NotAuthorizedException') {
+ toast.error('Incorrect current password');
+ } else if (error.name === 'InvalidPasswordException') {
+ toast.error('Password does not meet requirements');
+ } else {
  toast.error(error.message || 'Failed to update password');
+ }
  } finally {
  setIsLoadingPassword(false);
  }
@@ -93,15 +112,16 @@ export default function Settings() {
  <form onSubmit={handleUpdateProfile} className="space-y-6">
  <div className="grid sm:grid-cols-2 gap-6">
  <div>
- <label className="block text-sm font-medium text-text-secondary mb-2">Full Name</label>
+ <label className="block text-sm font-medium text-text-secondary mb-2">Username (Read Only)</label>
  <input
  type="text"
- value={name}
- onChange={(e) => setName(e.target.value)}
- className="w-full h-12 px-4 rounded-xl border border-border-subtle dark:border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-bg-primary"
- placeholder="John Doe"
- required
+ value={user?.username || ''}
+ disabled
+ className="w-full h-12 px-4 rounded-xl border border-border-subtle dark:border-border-subtle bg-bg-secondary dark:bg-bg-card text-text-secondary cursor-not-allowed"
  />
+ <p className="mt-1 text-xs text-text-secondary flex items-center gap-1">
+ <AlertCircle className="w-3 h-3" /> Username cannot be changed
+ </p>
  </div>
  
  <div>
@@ -117,7 +137,19 @@ export default function Settings() {
  </p>
  </div>
 
- <div className="sm:col-span-2">
+ <div>
+ <label className="block text-sm font-medium text-text-secondary mb-2">Full Name</label>
+ <input
+ type="text"
+ value={name}
+ onChange={(e) => setName(e.target.value)}
+ className="w-full h-12 px-4 rounded-xl border border-border-subtle dark:border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-bg-primary"
+ placeholder="John Doe"
+ required
+ />
+ </div>
+
+ <div>
  <label className="block text-sm font-medium text-text-secondary mb-2">Phone Number</label>
  <input
  type="tel"

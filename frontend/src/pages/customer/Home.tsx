@@ -55,8 +55,16 @@ export default function Home() {
  result = result.filter(p => p.price < 1000);
  } else if (priceFilter === '1000_5000') {
  result = result.filter(p => p.price >= 1000 && p.price <= 5000);
- } else if (priceFilter === 'over_5000') {
- result = result.filter(p => p.price > 5000);
+ } else if (priceFilter === '5000_10000') {
+ result = result.filter(p => p.price >= 5000 && p.price <= 10000);
+ } else if (priceFilter === '10000_25000') {
+ result = result.filter(p => p.price >= 10000 && p.price <= 25000);
+ } else if (priceFilter === '25000_50000') {
+ result = result.filter(p => p.price >= 25000 && p.price <= 50000);
+ } else if (priceFilter === '50000_100000') {
+ result = result.filter(p => p.price >= 50000 && p.price <= 100000);
+ } else if (priceFilter === 'over_100000') {
+ result = result.filter(p => p.price > 100000);
  }
 
  // 5. Sorting
@@ -94,7 +102,7 @@ export default function Home() {
  animate={{ opacity: 1 }}
  >
   {/* Full-width Hero Section */}
-  <section className="w-full relative -mt-8 mb-8 sm:mb-12">
+  <section className="w-full relative mb-8 sm:mb-12">
     <HeroCarousel />
   </section>
 

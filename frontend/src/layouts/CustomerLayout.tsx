@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, Home, Grid, Heart, Bell, Sun, Moon, LogOut } from 'lucide-react';
+import { Search, ShoppingCart, User, Home, Grid, Heart, Bell, Sun, Moon, LogOut, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useCart } from '../hooks/useCart';
@@ -66,28 +66,31 @@ export default function CustomerLayout() {
  <div className="min-h-screen bg-bg-secondary dark:bg-bg-primary flex flex-col transition-colors duration-200">
  <ScrollToTop />
  {/* Desktop Navbar */}
- <header className="sticky top-0 z-50 w-full border-b border-border-subtle dark:border-white/5 bg-bg-card/80 dark:bg-transparent backdrop-blur-md">
- <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
- <div className="flex items-center gap-8">
+ <header className="sticky top-0 z-50 w-full border-b border-border-subtle bg-bg-primary shadow-sm transition-colors duration-300">
+ <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 gap-4">
+ {/* Left: Logo & Nav */}
+ <div className="flex items-center gap-8 w-1/4 min-w-max">
  <Link to="/" className="text-2xl font-playfair font-bold tracking-tight text-text-primary focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded-lg">
  STOREFRONT
  </Link>
- <nav className="hidden md:flex gap-6">
- <Link to="/products" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-2 py-1">
- Products
+ <nav className="hidden lg:flex items-center gap-6">
+ <Link to="/products" className="text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-2 py-1">
+ Categories <ChevronDown className="w-4 h-4" />
  </Link>
- <Link to="/products?category=new" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-2 py-1">
+ <Link to="/products?category=new" className="text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-2 py-1">
  New Arrivals
  </Link>
  </nav>
  </div>
  
- <div className="flex items-center gap-2 sm:gap-4">
- <div className="relative hidden md:block">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
- <input id="input_eyrm" 
+ {/* Center: Large Search Bar */}
+ <div className="hidden md:flex flex-1 justify-center max-w-xl w-1/2">
+ <div className="relative w-full group">
+ <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-secondary group-focus-within:text-cyan-500 transition-colors" />
+ <input 
+ id="input_eyrm" 
  type="text" 
- placeholder="Search products..."
+ placeholder="Search for products, categories..."
  onKeyDown={(e) => {
  if (e.key === 'Enter') {
  const val = e.currentTarget.value.trim();
@@ -98,10 +101,13 @@ export default function CustomerLayout() {
  }
  }
  }}
- className="h-10 w-64 rounded-full border border-border-subtle dark:border-border-subtle bg-bg-secondary dark:bg-bg-card pl-10 pr-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-secondary"
+ className="h-12 w-full rounded-full border border-border-subtle bg-bg-secondary pl-12 pr-4 text-sm text-text-primary outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-text-secondary shadow-sm"
  />
  </div>
+ </div>
  
+ {/* Right: Actions */}
+ <div className="flex items-center justify-end gap-1 sm:gap-2 w-1/4 min-w-max">
  <Link to="/products" aria-label="Search" className="md:hidden p-2 text-text-secondary hover:text-text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded-full">
  <Search className="h-5 w-5" />
  </Link>
@@ -169,6 +175,13 @@ export default function CustomerLayout() {
  {user?.email || user?.username}
  </p>
  </div>
+ <Link 
+ to="/account" 
+ onClick={() => setIsProfileOpen(false)}
+ className="flex items-center gap-2 w-full p-2 text-sm text-text-primary hover:bg-bg-secondary rounded-lg transition-colors mb-1"
+ >
+ <User className="h-4 w-4 text-text-secondary" /> Profile
+ </Link>
  <button 
  onClick={() => { setIsProfileOpen(false); logout(); }} 
  className="flex items-center gap-2 w-full p-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"

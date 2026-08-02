@@ -1,166 +1,311 @@
+
 import { motion } from 'framer-motion';
-import { User, Heart, Settings, LogOut, Package, ChevronRight, Edit2, AlertCircle } from 'lucide-react';
+import { User, Heart, Settings, Package, ChevronRight, CreditCard, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useOrders } from '../../hooks/useOrders';
-import { Skeleton } from '../../components/ui/Skeleton';
+import { useWishlist } from '../../context/WishlistContext';
+import { useProducts } from '../../hooks/useProducts';
+import { usePaymentsByOrder } from '../../hooks/usePayments';
+import { Skeleton, ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { formatCurrency } from '../../utils/currency';
 import { safeFormatDate } from '../../utils/date';
-import { shortOrderId } from './Orders';
+import { ProductCard } from '../../components/customer/ProductCard';
+
+export function shortOrderId(id: string): string {
+  if (!id || id.length < 12) return id;
+  return `${id.substring(0, 8)}…${id.slice(-4)}`;
+}
+
+// Payment Row Component
+function OrderPaymentRow({ orderId, orderTotal, created_at }: { orderId: string, orderTotal: number, created_at: string }) {
+  const { data: payments, isLoading } = usePaymentsByOrder(orderId);
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-between p-4 rounded-2xl border border-border-subtle hover:bg-bg-secondary/50 transition-colors">
+        <Skeleton className="h-6 w-1/3" />
+        <Skeleton className="h-6 w-1/4" />
+      </div>
+    );
+  }
+
+  const latestPayment = payments && payments.length > 0 ? payments[payments.length - 1] : null;
+
+  if (!latestPayment) {
+    return (
+      <div className="flex items-center justify-between p-4 rounded-2xl border border-border-subtle bg-bg-secondary/20">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-border-subtle rounded-full text-text-secondary">
+            <CreditCard className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-text-primary">No payment record</p>
+            <p className="text-xs text-text-secondary">Order {shortOrderId(orderId)}</p>
+          </div>
+        </div>
+        <span className="font-semibold text-text-primary">{formatCurrency(orderTotal)}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border-subtle hover:bg-bg-secondary/50 transition-all gap-4">
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-primary/10 rounded-full text-primary">
+          <CreditCard className="w-5 h-5" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-text-primary font-mono truncate max-w-[120px] sm:max-w-xs">{latestPayment.payment_id}</p>
+          <p className="text-xs text-text-secondary">{safeFormatDate(latestPayment.updated_at || created_at)}</p>
+        </div>
+      </div>
+      <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 min-w-max">
+        <span className="font-semibold text-text-primary">{formatCurrency(latestPayment.amount)}</span>
+        <StatusBadge status={latestPayment.payment_status} />
+      </div>
+    </div>
+  );
+}
 
 export default function Profile() {
- const { user, logout } = useAuth();
- const navigate = useNavigate();
- const { data: orders, isLoading: isLoadingOrders, isError: isErrorOrders } = useOrders(user?.userId);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Orders
+  const { data: orders, isLoading: isLoadingOrders } = useOrders(user?.userId);
+  const sortedOrders = orders ? [...orders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) : [];
+  const recentOrders = sortedOrders.slice(0, 5); // Limit to 5 for Payments and Recent Orders
 
- const initials = user?.displayName ? user.displayName.substring(0, 2).toUpperCase() : 'U';
+  // Wishlist
+  const { items: wishlistItems, isLoading: isWishlistLoading } = useWishlist();
+  const { data: allProducts = [], isLoading: isProductsLoading } = useProducts();
+  const wishlistProducts = allProducts.filter(p => wishlistItems.some(i => i.product_id === p.id));
+  
+  const initials = user?.displayName ? user.displayName.substring(0, 2).toUpperCase() : 'U';
 
- const handleLogout = async () => {
- await logout();
- navigate('/login');
- };
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-12"
+    >
+      
+      {/* 1. Header / Profile Summary */}
+      <div className="bg-bg-card rounded-[32px] p-8 sm:p-12 shadow-soft border border-border-subtle flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+        {/* Decorative Background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
+        
+        <div className="w-32 h-32 shrink-0 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full p-1 relative z-10 shadow-lg">
+          <div className="w-full h-full bg-bg-card rounded-full flex items-center justify-center text-4xl font-bold text-text-primary">
+            {initials}
+          </div>
+        </div>
+        <div className="text-center md:text-left relative z-10 flex-1">
+          <h1 className="text-3xl md:text-4xl font-playfair font-bold text-text-primary mb-2">{user?.displayName || 'Valued Customer'}</h1>
+          <p className="text-lg text-text-secondary mb-4">{user?.email}</p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-bg-secondary text-sm font-medium text-text-secondary border border-border-subtle">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            Active Member
+          </div>
+        </div>
+        <div className="relative z-10 shrink-0 mt-4 md:mt-0">
+           <Link to="/settings" className="px-6 py-3 rounded-xl bg-bg-secondary border border-border-subtle text-text-primary hover:bg-border-subtle transition-colors flex items-center gap-2 font-medium shadow-sm">
+             <Settings className="w-5 h-5" /> Account Settings
+           </Link>
+        </div>
+      </div>
 
- const recentOrders = orders ? orders.slice(0, 3) : [];
+      <div className="grid md:grid-cols-3 gap-8">
+        
+        {/* Left Column: Account Info & Payments */}
+        <div className="space-y-8 md:col-span-1">
+          
+          {/* Account Information */}
+          <div className="bg-bg-card rounded-[32px] p-6 sm:p-8 shadow-soft border border-border-subtle relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all">
+            <h2 className="text-xl font-bold text-text-primary flex items-center gap-2 mb-6">
+              <User className="w-5 h-5 text-primary" /> Account Details
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-1">Full Name</p>
+                <p className="font-semibold text-text-primary">{user?.displayName || 'Not provided'}</p>
+              </div>
+              <div className="w-full h-px bg-border-subtle/50" />
+              <div>
+                <p className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-1">Email Address</p>
+                <p className="font-semibold text-text-primary break-all">{user?.email || user?.username}</p>
+              </div>
+              <div className="w-full h-px bg-border-subtle/50" />
+              <div>
+                <p className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-1">User ID</p>
+                <p className="font-mono text-xs text-text-secondary break-all bg-bg-secondary p-3 rounded-xl mt-1 border border-border-subtle">
+                  {user?.userId}
+                </p>
+              </div>
+            </div>
+          </div>
 
- return (
- <motion.div 
- initial={{ opacity: 0 }}
- animate={{ opacity: 1 }}
- className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
- >
- <div className="grid md:grid-cols-3 gap-8">
- 
- {/* Sidebar */}
- <div className="space-y-6">
- <div className="bg-bg-card dark:bg-bg-card p-6 rounded-[32px] shadow-soft border border-border-subtle dark:border-border-subtle text-center relative">
- <button className="absolute top-4 right-4 p-2 text-text-secondary hover:text-primary transition-colors">
- <Edit2 className="h-4 w-4" />
- </button>
- <div className="w-24 h-24 mx-auto bg-primary/10 text-primary rounded-full flex items-center justify-center text-3xl font-bold mb-4">
- {initials}
- </div>
- <h2 className="text-xl font-bold text-text-primary">{user?.displayName}</h2>
- <p className="text-text-secondary dark:text-text-secondary text-sm">{user?.email || user?.username}</p>
- </div>
+          {/* Payments Section */}
+          <div className="bg-bg-card rounded-[32px] p-6 sm:p-8 shadow-soft border border-border-subtle relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all flex flex-col h-[400px]">
+            <div className="flex items-center justify-between mb-6 shrink-0">
+              <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary" /> Payment History
+              </h2>
+            </div>
+            
+            <div className="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-2">
+              {isLoadingOrders ? (
+                <>
+                  <Skeleton className="h-16 w-full rounded-2xl !bg-bg-secondary" />
+                  <Skeleton className="h-16 w-full rounded-2xl !bg-bg-secondary" />
+                </>
+              ) : recentOrders.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-text-secondary">No recent payments found.</p>
+                </div>
+              ) : (
+                recentOrders.map(order => (
+                  <OrderPaymentRow 
+                    key={`payment-${order.order_id}`} 
+                    orderId={order.order_id} 
+                    orderTotal={order.total_amount} 
+                    created_at={order.created_at} 
+                  />
+                ))
+              )}
+            </div>
+            {recentOrders.length > 0 && (
+              <div className="pt-4 mt-2 border-t border-dashed border-border-subtle shrink-0">
+                <Link to="/orders" className="text-sm font-medium text-primary hover:text-cyan-400 flex items-center justify-center gap-1 transition-colors w-full p-2">
+                  View all orders <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+            )}
+          </div>
 
- <div className="bg-bg-card dark:bg-bg-card rounded-[32px] shadow-soft border border-border-subtle dark:border-border-subtle overflow-hidden">
- <div className="p-2">
- <Link to="/account" className="flex items-center gap-3 p-3 rounded-2xl bg-primary/5 text-primary font-medium">
- <User className="h-5 w-5" />
- Profile Overview
- </Link>
- <Link to="/orders" className="flex items-center gap-3 p-3 rounded-2xl text-text-secondary hover:bg-bg-secondary dark:hover:bg-bg-secondary hover:text-text-primary transition-colors">
- <Package className="h-5 w-5" />
- My Orders
- </Link>
- <Link to="/wishlist" className="flex items-center gap-3 p-3 rounded-2xl text-text-secondary hover:bg-bg-secondary dark:hover:bg-bg-secondary hover:text-text-primary transition-colors">
- <Heart className="h-5 w-5" />
- Wishlist
- </Link>
- <Link to="/settings" className="flex items-center gap-3 p-3 rounded-2xl text-text-secondary hover:bg-bg-secondary dark:hover:bg-bg-secondary hover:text-text-primary transition-colors">
- <Settings className="h-5 w-5" />
- Settings
- </Link>
- </div>
- <div className="p-2 border-t border-border-subtle dark:border-border-subtle">
- <button 
- onClick={handleLogout}
- className="w-full flex items-center gap-3 p-3 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
- >
- <LogOut className="h-5 w-5" />
- Log out
- </button>
- </div>
- </div>
- </div>
+        </div>
 
- <div className="md:col-span-2 space-y-8">
- 
- {/* Recent Orders */}
- <div className="bg-bg-card dark:bg-bg-card rounded-[32px] p-8 shadow-soft border border-border-subtle dark:border-border-subtle">
- <div className="flex items-center justify-between mb-6">
- <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
- <Package className="h-6 w-6 text-primary" />
- Recent Orders
- </h3>
- <Link to="/orders" className="text-sm font-medium text-primary hover:text-primary-hover transition-colors">
- View all
- </Link>
- </div>
- 
- <div className="space-y-4">
- {isLoadingOrders ? (
- <>
- <Skeleton className="h-20 w-full rounded-2xl" />
- <Skeleton className="h-20 w-full rounded-2xl" />
- <Skeleton className="h-20 w-full rounded-2xl" />
- </>
- ) : isErrorOrders ? (
- <div className="py-8 text-center border border-dashed border-red-200 dark:border-red-900/50 rounded-2xl bg-red-50/50 dark:bg-red-900/10">
- <AlertCircle className="mx-auto h-8 w-8 text-red-500 mb-2" />
- <p className="text-text-secondary dark:text-text-secondary">Failed to load recent orders.</p>
- </div>
- ) : recentOrders.length === 0 ? (
- <div className="py-8 border border-dashed border-border-subtle dark:border-border-subtle rounded-2xl">
- <EmptyState 
- icon={Package}
- title="No recent orders"
- description="You haven't placed any orders yet."
- action={
- <Link to="/products" className="inline-flex items-center justify-center h-10 px-6 rounded-xl bg-primary text-white font-medium hover:bg-primary-hover transition-colors">
- Start Shopping
- </Link>
- }
- />
- </div>
- ) : (
- recentOrders.map(order => (
- <div 
- key={order.order_id} 
- className="flex items-center justify-between p-4 rounded-2xl border border-border-subtle dark:border-border-subtle hover:border-primary/30 hover:shadow-[0_8px_30px_rgba(21,216,255,0.08)] transition-all cursor-pointer"
- onClick={() => navigate('/orders')}
- >
- <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-full bg-bg-secondary flex items-center justify-center text-primary">
- <Package className="h-6 w-6" />
- </div>
- <div>
- <h4 className="font-semibold text-text-primary mb-1">Order {shortOrderId(order.order_id)}</h4>
- <p className="text-sm text-text-secondary dark:text-text-secondary">{safeFormatDate(order.created_at, { year: 'numeric', month: 'numeric', day: 'numeric'})}</p>
- </div>
- </div>
- <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-2/3">
- <span className="font-medium text-text-primary">{formatCurrency(order.total_amount)}</span>
- <div className="flex flex-col gap-1 items-end">
- <StatusBadge status={order.order_status} />
- <span className="text-xs text-text-secondary dark:text-text-secondary">Pay: {order.payment_status}</span>
- </div>
- <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-primary transition-colors hidden sm:block" />
- </div>
- </div>
- ))
- )}
- </div>
- </div>
+        {/* Right Column: Orders & Wishlist */}
+        <div className="space-y-8 md:col-span-2">
+          
+          {/* Recent Orders */}
+          <div className="bg-bg-card rounded-[32px] p-6 sm:p-8 shadow-soft border border-border-subtle flex flex-col group hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+                <Package className="w-5 h-5 text-primary" /> Recent Orders
+              </h2>
+              <Link to="/orders" className="text-sm font-medium text-primary hover:text-cyan-400 flex items-center gap-1 transition-colors">
+                View all history <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            
+            <div className="space-y-4">
+              {isLoadingOrders ? (
+                <>
+                  <Skeleton className="h-24 w-full rounded-2xl !bg-bg-secondary" />
+                  <Skeleton className="h-24 w-full rounded-2xl !bg-bg-secondary" />
+                </>
+              ) : recentOrders.length === 0 ? (
+                <EmptyState 
+                  icon={ShoppingBag}
+                  title="No orders yet"
+                  description="Start shopping to see your orders here."
+                  action={
+                    <Link to="/products" className="inline-flex h-10 px-6 items-center justify-center rounded-xl bg-primary text-bg-primary font-medium hover:bg-primary-hover shadow-sm transition-all">
+                      Shop Now
+                    </Link>
+                  }
+                />
+              ) : (
+                recentOrders.map(order => (
+                  <div 
+                    key={order.order_id}
+                    onClick={() => navigate('/orders')}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl border border-border-subtle hover:border-primary/30 hover:bg-bg-secondary/30 transition-all cursor-pointer group/card gap-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover/card:scale-110 transition-transform">
+                        <Package className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-text-primary mb-1">Order {shortOrderId(order.order_id)}</h3>
+                        <p className="text-sm text-text-secondary">{safeFormatDate(order.created_at)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-1/2">
+                      <div className="text-left sm:text-right">
+                        <p className="font-semibold text-text-primary">{formatCurrency(order.total_amount)}</p>
+                        <p className="text-xs text-text-secondary mt-1">{order.items.length} items</p>
+                      </div>
+                      <StatusBadge status={order.order_status} />
+                      <ChevronRight className="w-5 h-5 text-border-subtle group-hover/card:text-primary transition-colors hidden sm:block" />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
 
- <div className="grid sm:grid-cols-2 gap-6">
- <Link to="/wishlist" className="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-gray-800 dark:to-gray-800 p-6 rounded-3xl border border-pink-200 dark:border-border-subtle hover:shadow-md transition-all group">
- <Heart className="h-8 w-8 text-pink-500 mb-4 group-hover:scale-110 transition-transform" fill="currentColor" />
- <h3 className="text-lg font-bold text-text-primary mb-1">My Wishlist</h3>
- <p className="text-sm text-text-secondary">View saved items</p>
- </Link>
- 
- <Link to="/settings" className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800 p-6 rounded-3xl border border-border-subtle dark:border-border-subtle hover:shadow-md transition-all group">
- <Settings className="h-8 w-8 text-text-secondary dark:text-text-secondary mb-4 group-hover:rotate-45 transition-transform duration-300" />
- <h3 className="text-lg font-bold text-text-primary mb-1">Account Settings</h3>
- <p className="text-sm text-text-secondary">Manage your password & details</p>
- </Link>
- </div>
- </div>
- 
- </div>
- </motion.div>
- );
+          {/* Wishlist Section */}
+          <div className="bg-bg-card rounded-[32px] p-6 sm:p-8 shadow-soft border border-border-subtle group hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+                <Heart className="w-5 h-5 text-pink-500 fill-pink-500" /> Wishlist
+              </h2>
+              {wishlistProducts.length > 0 && (
+                <Link to="/wishlist" className="text-sm font-medium text-text-secondary hover:text-text-primary bg-bg-secondary px-4 py-1.5 rounded-full border border-border-subtle transition-colors flex items-center gap-2">
+                  {wishlistProducts.length} items saved <ChevronRight className="w-4 h-4" />
+                </Link>
+              )}
+            </div>
+
+            <div className="min-h-[250px]">
+              {isWishlistLoading || isProductsLoading ? (
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <ProductCardSkeleton />
+                  <ProductCardSkeleton />
+                </div>
+              ) : wishlistProducts.length === 0 ? (
+                <div className="text-center py-12 border border-dashed border-border-subtle rounded-3xl h-full flex flex-col items-center justify-center">
+                  <Heart className="w-12 h-12 text-border-subtle mx-auto mb-3" />
+                  <h3 className="text-lg font-bold text-text-primary mb-1">Wishlist is empty</h3>
+                  <p className="text-text-secondary mb-4 text-sm">Items you save will appear here.</p>
+                  <Link to="/products" className="text-sm font-medium text-primary hover:underline">
+                    Explore products
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  {wishlistProducts.slice(0, 3).map(product => (
+                    <ProductCard 
+                      key={product.id} 
+                      id={product.id as string} 
+                      name={product.name}
+                      price={product.price}
+                      image_url={product.image_url}
+                      category={product.category || "Saved Item"}
+                      is_active={product.is_active !== false}
+                      is_featured={product.is_featured}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {wishlistProducts.length > 3 && (
+              <div className="mt-6 pt-4 border-t border-dashed border-border-subtle text-center">
+                 <Link to="/wishlist" className="text-sm font-medium text-primary hover:text-cyan-400 transition-colors">
+                   View {wishlistProducts.length - 3} more items
+                 </Link>
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+    </motion.div>
+  );
 }
