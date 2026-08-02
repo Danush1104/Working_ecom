@@ -44,9 +44,11 @@ export const paymentService = {
  },
 
  getOrderPayments: async (orderId: string): Promise<Payment[]> => {
- const response = await apiClient.get(`${PAYMENT_API_URL}/order/${orderId}`);
- return response.data.data || [];
- },
+    const response = await apiClient.get(`${PAYMENT_API_URL}/order/${orderId}`);
+    console.log("Payment API Response (getOrderPayments):", response.data);
+    const data = response.data.data || response.data;
+    return Array.isArray(data) ? data : (data ? [data] : []);
+  },
 
  getAllPayments: async (): Promise<Payment[]> => {
  const response = await apiClient.get(`${PAYMENT_API_URL}/all`);

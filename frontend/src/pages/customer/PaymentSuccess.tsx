@@ -77,11 +77,11 @@ export default function PaymentSuccess() {
  <div className="bg-bg-card dark:bg-bg-card border border-border-subtle dark:border-border-subtle p-8 rounded-[32px] shadow-soft max-w-md mx-auto mb-8 text-left space-y-4">
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 border-b border-border-subtle dark:border-border-subtle pb-3">
  <span className="text-text-secondary dark:text-text-secondary">Order ID:</span>
- <span className="font-medium text-text-primary sm:col-span-2 break-all">{order.order_id}</span>
+ <span title={order.order_id} className="font-medium text-text-primary sm:col-span-2 truncate min-w-0">{order.order_id}</span>
  </div>
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 border-b border-border-subtle dark:border-border-subtle pb-3">
  <span className="text-text-secondary dark:text-text-secondary">Payment ID:</span>
- <span className="font-medium text-text-primary sm:col-span-2 break-all">{payment.payment_id}</span>
+ <span title={payment.payment_id} className="font-medium text-text-primary sm:col-span-2 truncate min-w-0">{payment.payment_id}</span>
  </div>
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 items-center">
  <span className="text-text-secondary dark:text-text-secondary">Method:</span>

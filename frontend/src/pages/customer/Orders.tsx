@@ -261,7 +261,7 @@ export default function Orders() {
  <div className="bg-bg-secondary/50 p-6 rounded-2xl border border-border-subtle space-y-4 text-sm">
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 border-b border-border-subtle pb-3">
  <span className="text-text-secondary font-medium">Payment ID</span>
- <span className="font-space font-medium text-text-primary sm:col-span-2 break-all">{latestPayment.payment_id}</span>
+ <span title={latestPayment.payment_id} className="font-space font-medium text-text-primary sm:col-span-2 truncate min-w-0">{latestPayment.payment_id}</span>
  </div>
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 border-b border-border-subtle pb-3">
  <span className="text-text-secondary font-medium">Amount</span>

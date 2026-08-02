@@ -59,12 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  (typeof customRole === 'string'&& customRole.toLowerCase() === 'admin');
 
  const email = idTokenPayload?.email as string;
- let displayName = idTokenPayload.name || idTokenPayload.display_name;
- if (!displayName && email) {
- displayName = email.split('@')[0];
- } else if (!displayName) {
- displayName = currentUser.username;
- }
+  let displayName = idTokenPayload.name || idTokenPayload.display_name;
+  if (!displayName && email) {
+    displayName = email.split('@')[0]
+      .replace(/[._-]/g, ' ')
+      .replace(/\b\w/g, char => char.toUpperCase());
+  } else if (!displayName) {
+    displayName = currentUser.username;
+  }
 
  setUser({
  username: currentUser.username,

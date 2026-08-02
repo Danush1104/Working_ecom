@@ -63,7 +63,7 @@ export default function CustomerLayout() {
  }, []);
 
  return (
- <div className="min-h-screen bg-bg-secondary dark:bg-bg-primary flex flex-col transition-colors duration-200">
+ <div className="min-h-screen bg-bg-secondary dark:bg-bg-primary flex flex-col transition-colors duration-200 overflow-x-hidden w-full max-w-full min-w-0">
  <ScrollToTop />
  {/* Desktop Navbar */}
  <header className="sticky top-0 z-50 w-full border-b border-border-subtle bg-bg-primary shadow-sm transition-colors duration-300">
@@ -168,11 +168,11 @@ export default function CustomerLayout() {
  className="absolute right-0 mt-2 w-[180px] bg-bg-card rounded-xl shadow-xl border border-border-subtle overflow-hidden z-50 p-2"
  >
  <div className="px-3 py-2 border-b border-border-subtle mb-1">
- <p className="text-sm font-medium text-text-primary truncate">
- Welcome, {user?.displayName}
+ <p className="text-xs text-text-secondary mb-0.5">
+ Welcome 👋
  </p>
- <p className="text-xs text-text-secondary truncate mt-1">
- {user?.email || user?.username}
+ <p className="text-sm font-medium text-text-primary truncate">
+ {user?.displayName}
  </p>
  </div>
  <Link 

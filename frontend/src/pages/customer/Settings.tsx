@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Lock, Save, AlertCircle } from 'lucide-react';
+import { User, Lock, Save, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { updateUserAttributes, updatePassword, fetchUserAttributes } from 'aws-amplify/auth';
 import toast from 'react-hot-toast';
@@ -17,6 +17,10 @@ export default function Settings() {
 
  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
  const [isLoadingPassword, setIsLoadingPassword] = useState(false);
+
+ const [showOldPassword, setShowOldPassword] = useState(false);
+ const [showNewPassword, setShowNewPassword] = useState(false);
+ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
  useEffect(() => {
    async function loadAttributes() {
@@ -196,35 +200,65 @@ export default function Settings() {
  <div className="max-w-md space-y-5">
  <div>
  <label className="block text-sm font-medium text-text-secondary mb-2">Current Password</label>
+ <div className="relative">
  <input
- type="password"
+ type={showOldPassword ? "text" : "password"}
  required
  value={oldPassword}
  onChange={(e) => setOldPassword(e.target.value)}
- className="w-full h-12 px-4 rounded-xl border border-border-subtle dark:border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-bg-primary"
+ className="w-full h-12 pl-4 pr-11 rounded-xl border border-border-subtle dark:border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-bg-primary"
  />
+ <button
+ type="button"
+ onClick={() => setShowOldPassword(!showOldPassword)}
+ aria-label={showOldPassword ? "Hide password" : "Show password"}
+ className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-secondary hover:text-text-primary transition-colors"
+ >
+ {showOldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+ </button>
+ </div>
  </div>
  
  <div>
  <label className="block text-sm font-medium text-text-secondary mb-2">New Password</label>
+ <div className="relative">
  <input
- type="password"
+ type={showNewPassword ? "text" : "password"}
  required
  value={newPassword}
  onChange={(e) => setNewPassword(e.target.value)}
- className="w-full h-12 px-4 rounded-xl border border-border-subtle dark:border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-bg-primary"
+ className="w-full h-12 pl-4 pr-11 rounded-xl border border-border-subtle dark:border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-bg-primary"
  />
+ <button
+ type="button"
+ onClick={() => setShowNewPassword(!showNewPassword)}
+ aria-label={showNewPassword ? "Hide password" : "Show password"}
+ className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-secondary hover:text-text-primary transition-colors"
+ >
+ {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+ </button>
+ </div>
  </div>
 
  <div>
  <label className="block text-sm font-medium text-text-secondary mb-2">Confirm New Password</label>
+ <div className="relative">
  <input
- type="password"
+ type={showConfirmPassword ? "text" : "password"}
  required
  value={confirmPassword}
  onChange={(e) => setConfirmPassword(e.target.value)}
- className="w-full h-12 px-4 rounded-xl border border-border-subtle dark:border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-bg-primary"
+ className="w-full h-12 pl-4 pr-11 rounded-xl border border-border-subtle dark:border-border-subtle focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:bg-bg-primary"
  />
+ <button
+ type="button"
+ onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+ aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+ className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-secondary hover:text-text-primary transition-colors"
+ >
+ {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+ </button>
+ </div>
  </div>
  </div>
 

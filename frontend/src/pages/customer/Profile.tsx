@@ -42,7 +42,7 @@ function OrderPaymentRow({ orderId, orderTotal, created_at }: { orderId: string,
             <CreditCard className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-sm font-medium text-text-primary">No payment record</p>
+            <p className="text-sm font-medium text-text-primary">Payment</p>
             <p className="text-xs text-text-secondary">Order {shortOrderId(orderId)}</p>
           </div>
         </div>
@@ -53,12 +53,17 @@ function OrderPaymentRow({ orderId, orderTotal, created_at }: { orderId: string,
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border-subtle hover:bg-bg-secondary/50 transition-all gap-4">
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-primary/10 rounded-full text-primary">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0">
           <CreditCard className="w-5 h-5" />
         </div>
-        <div>
-          <p className="text-sm font-medium text-text-primary font-mono truncate max-w-[120px] sm:max-w-xs">{latestPayment.payment_id}</p>
+        <div className="min-w-0 flex-1">
+          <p 
+            title={latestPayment.payment_id}
+            className="text-sm font-medium text-text-primary font-mono truncate overflow-hidden text-ellipsis min-w-0"
+          >
+            {latestPayment.payment_id}
+          </p>
           <p className="text-xs text-text-secondary">{safeFormatDate(latestPayment.updated_at || created_at)}</p>
         </div>
       </div>
@@ -104,8 +109,7 @@ export default function Profile() {
           </div>
         </div>
         <div className="text-center md:text-left relative z-10 flex-1">
-          <h1 className="text-3xl md:text-4xl font-playfair font-bold text-text-primary mb-2">{user?.displayName || 'Valued Customer'}</h1>
-          <p className="text-lg text-text-secondary mb-4">{user?.email}</p>
+          <h1 className="text-3xl md:text-4xl font-playfair font-bold text-text-primary mb-2">Welcome, {user?.displayName}</h1>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-bg-secondary text-sm font-medium text-text-secondary border border-border-subtle">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             Active Member

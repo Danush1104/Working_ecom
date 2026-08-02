@@ -156,23 +156,53 @@ export default function Products() {
  setPage(1);
  }}
  />
- <div className="flex items-center gap-2">
- <input id="input_uuel" 
- type="number" 
- placeholder="Min" 
- value={minPrice}
- onChange={(e) => { setMinPrice(e.target.value ? Number(e.target.value) : ''); setPage(1); }}
- className="w-full px-3 py-2 border border-border-subtle rounded-lg text-sm bg-bg-card dark:bg-bg-card dark:border-border-subtle outline-none focus:border-primary" 
- />
- <span className="text-text-secondary dark:text-text-secondary">-</span>
- <input id="input_pjxx" 
- type="number" 
- placeholder="Max" 
- value={maxPrice}
- onChange={(e) => { setMaxPrice(e.target.value ? Number(e.target.value) : ''); setPage(1); }}
- className="w-full px-3 py-2 border border-border-subtle rounded-lg text-sm bg-bg-card dark:bg-bg-card dark:border-border-subtle outline-none focus:border-primary" 
- />
- </div>
+  <div className="flex items-center gap-2">
+    <input 
+      type="number" 
+      placeholder="Min" 
+      value={minPrice}
+      onChange={(e) => { setMinPrice(e.target.value ? Number(e.target.value) : ''); setPage(1); }}
+      onBlur={() => {
+        let min = minPrice === '' ? 0 : Number(minPrice);
+        let max = maxPrice === '' ? sliderMax : Number(maxPrice);
+        min = Math.max(0, min);
+        if (min > max) {
+          const temp = min;
+          min = max;
+          max = temp;
+          setMaxPrice(max);
+        }
+        setMinPrice(min);
+      }}
+      onKeyDown={(e) => {
+        if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+      }}
+      className="w-full min-w-0 overflow-hidden text-right px-3 py-2 border border-border-subtle rounded-lg text-sm bg-bg-card dark:bg-bg-card dark:border-border-subtle outline-none focus:border-primary" 
+    />
+    <span className="text-text-secondary dark:text-text-secondary">-</span>
+    <input 
+      type="number" 
+      placeholder="Max" 
+      value={maxPrice}
+      onChange={(e) => { setMaxPrice(e.target.value ? Number(e.target.value) : ''); setPage(1); }}
+      onBlur={() => {
+        let min = minPrice === '' ? 0 : Number(minPrice);
+        let max = maxPrice === '' ? sliderMax : Number(maxPrice);
+        max = Math.max(0, max);
+        if (min > max) {
+          const temp = min;
+          min = max;
+          max = temp;
+          setMinPrice(min);
+        }
+        setMaxPrice(max);
+      }}
+      onKeyDown={(e) => {
+        if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+      }}
+      className="w-full min-w-0 overflow-hidden text-right px-3 py-2 border border-border-subtle rounded-lg text-sm bg-bg-card dark:bg-bg-card dark:border-border-subtle outline-none focus:border-primary" 
+    />
+  </div>
  </div>
  </div>
  </aside>
