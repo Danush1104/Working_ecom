@@ -38,14 +38,15 @@ class ProductRepository:
             logger.error(f"Failed to get product from DynamoDB: {str(e)}")
             raise DatabaseError(f"Database error during product retrieval: {str(e)}")
 
-    def list_products(self) -> List[Product]:
-        """Scans the table to list all active products."""
+    def list_products(self, include_inactive: bool = False) -> List[Product]:
+        """Scans the table to list products."""
         try:
-            # Filters inactive products
-            response = self.table.scan(
-                FilterExpression="is_active = :active",
-                ExpressionAttributeValues={":active": True}
-            )
+            kwargs = {}
+            if not include_inactive:
+                kwargs["FilterExpression"] = "is_active = :active"
+                kwargs["ExpressionAttributeValues"] = {":active": True}
+                
+            response = self.table.scan(**kwargs)
             items = response.get("Items", [])
             return [Product.from_dict(item) for item in items if item.get("entity_type") != "CATEGORY"]
         except ClientError as e:
@@ -71,7 +72,10 @@ class ProductRepository:
 
         update_expression = "SET " + ", ".join(update_expression_parts)
 
-        expression_attribute_values[":is_active_condition"] = True
+        condition_expression = "attribute_exists(product_id)"
+        if "is_active" not in update_fields:
+            condition_expression += " AND is_active = :is_active_condition"
+            expression_attribute_values[":is_active_condition"] = True
         
         try:
             self.table.update_item(
@@ -79,7 +83,7 @@ class ProductRepository:
                 UpdateExpression=update_expression,
                 ExpressionAttributeNames=expression_attribute_names,
                 ExpressionAttributeValues=expression_attribute_values,
-                ConditionExpression="attribute_exists(product_id) AND is_active = :is_active_condition"
+                ConditionExpression=condition_expression
             )
         except ClientError as e:
             if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
@@ -119,12 +123,17 @@ class ProductRepository:
         category: Optional[str] = None,
         keyword: Optional[str] = None,
         min_price: Optional[Decimal] = None,
-        max_price: Optional[Decimal] = None
+        max_price: Optional[Decimal] = None,
+        include_inactive: bool = False
     ) -> List[Product]:
         """Searches products with GSI queries (by category) or Scans (if no category)."""
-        filter_expressions = ["is_active = :active"]
+        filter_expressions = []
         expression_attribute_names = {}
-        expression_attribute_values = {":active": True}
+        expression_attribute_values = {}
+        
+        if not include_inactive:
+            filter_expressions.append("is_active = :active")
+            expression_attribute_values[":active"] = True
 
         # Add price filters
         if min_price is not None:
@@ -141,7 +150,7 @@ class ProductRepository:
             expression_attribute_names["#desc"] = "description"
             expression_attribute_values[":keyword"] = keyword
 
-        filter_expression_str = " AND ".join(filter_expressions)
+        filter_expression_str = " AND ".join(filter_expressions) if filter_expressions else None
 
         try:
             if category:
@@ -149,22 +158,27 @@ class ProductRepository:
                 query_kwargs = {
                     "IndexName": "category-index",
                     "KeyConditionExpression": "category = :category",
-                    "FilterExpression": filter_expression_str,
-                    "ExpressionAttributeValues": {
+                }
+                if filter_expression_str:
+                    query_kwargs["FilterExpression"] = filter_expression_str
+                if expression_attribute_values:
+                    query_kwargs["ExpressionAttributeValues"] = {
                         **expression_attribute_values,
                         ":category": category
                     }
-                }
+                else:
+                    query_kwargs["ExpressionAttributeValues"] = {":category": category}
                 if expression_attribute_names:
                     query_kwargs["ExpressionAttributeNames"] = expression_attribute_names
                 
                 response = self.table.query(**query_kwargs)
             else:
                 # Scan table (since category partition key is missing)
-                scan_kwargs = {
-                    "FilterExpression": filter_expression_str,
-                    "ExpressionAttributeValues": expression_attribute_values
-                }
+                scan_kwargs = {}
+                if filter_expression_str:
+                    scan_kwargs["FilterExpression"] = filter_expression_str
+                if expression_attribute_values:
+                    scan_kwargs["ExpressionAttributeValues"] = expression_attribute_values
                 if expression_attribute_names:
                     scan_kwargs["ExpressionAttributeNames"] = expression_attribute_names
                 

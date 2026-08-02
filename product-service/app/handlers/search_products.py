@@ -12,13 +12,15 @@ def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     keyword = query_params.get("keyword")
     min_price = query_params.get("min_price")
     max_price = query_params.get("max_price")
+    include_inactive = query_params.get("include_inactive", "").lower() == "true"
     
     service = ProductService()
     products = service.search_products(
         category=category,
         keyword=keyword,
         min_price=min_price,
-        max_price=max_price
+        max_price=max_price,
+        include_inactive=include_inactive
     )
     
     return success_response(

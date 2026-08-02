@@ -6,12 +6,12 @@
 
 @layer base {
   :root {
-    --bg-primary: #F7F9FC;
-    --bg-secondary: #E5E7EB;
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #FFFFFF;
     --bg-card: #FFFFFF;
-    --text-primary: #1F2937;
+    --text-primary: #111827;
     --text-secondary: #6B7280;
-    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-subtle: #E5E7EB;
   }
 
   .dark {

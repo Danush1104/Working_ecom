@@ -31,59 +31,59 @@ const Signup = lazy(() => import('../pages/auth/Signup'));
 const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
 
 export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <AuthGuard />,
-    children: [
-      {
-        path: '/',
-        element: <CustomerLayout />,
-        children: [
-          { index: true, element: <Home /> },
-          { path: 'products', element: <Products /> },
-          { path: 'product/:id', element: <ProductDetails /> },
-          { path: 'cart', element: <Cart /> },
-          { path: 'checkout', element: <Checkout /> },
-          { path: 'wishlist', element: <Wishlist /> },
-          { path: 'account', element: <Profile /> },
-          { path: 'orders', element: <CustomerOrders /> },
-          { path: 'payment/:orderId', element: <Payment /> },
-          { path: 'payment-success/:orderId/:paymentId', element: <PaymentSuccess /> },
-          { path: 'settings', element: <Settings /> },
-          { path: 'reviews', element: <AllReviews /> },
-        ],
-      },
-      {
-        path: '/admin',
-        element: <AuthGuard requireAdmin={true} />,
-        children: [
-          {
-            path: '/admin',
-            element: <AdminLayout />,
-            children: [
-              { index: true, element: <Dashboard /> },
-              { path: 'products', element: <AdminProducts /> },
-              { path: 'categories', element: <Categories /> },
-              { path: 'inventory', element: <Inventory /> },
-              { path: 'carts', element: <Carts /> },
-              { path: 'orders', element: <Orders /> },
-              { path: 'payments', element: <Payments /> },
-              { path: 'reviews', element: <Reviews /> },
-              { path: 'dashboard', element: <Dashboard /> },
-            ],
-          },
-        ]
-      }
-    ]
-  },
-  {
-    path: '/',
-    element: <GuestGuard />,
-    children: [
-      { path: 'login', element: <Login /> },
-      { path: 'signup', element: <Signup /> },
-      { path: 'forgot-password', element: <ForgotPassword /> },
-      { path: 'reset-password', element: <Navigate to="/forgot-password" replace /> },
-    ]
-  }
+ {
+ path: '/',
+ element: <AuthGuard />,
+ children: [
+ {
+ path: '/',
+ element: <CustomerLayout />,
+ children: [
+ { index: true, element: <Home /> },
+ { path: 'products', element: <Products /> },
+ { path: 'product/:id', element: <ProductDetails /> },
+ { path: 'cart', element: <Cart /> },
+ { path: 'checkout', element: <Checkout /> },
+ { path: 'wishlist', element: <Wishlist /> },
+ { path: 'account', element: <Profile /> },
+ { path: 'orders', element: <CustomerOrders /> },
+ { path: 'payment/:orderId', element: <Payment /> },
+ { path: 'payment-success/:orderId/:paymentId', element: <PaymentSuccess /> },
+ { path: 'settings', element: <Settings /> },
+ { path: 'reviews', element: <AllReviews /> },
+ ],
+ },
+ {
+ path: '/admin',
+ element: <AuthGuard requireAdmin={true} />,
+ children: [
+ {
+ path: '/admin',
+ element: <AdminLayout />,
+ children: [
+ { index: true, element: <Dashboard /> },
+ { path: 'products', element: <AdminProducts /> },
+ { path: 'categories', element: <Categories /> },
+ { path: 'inventory', element: <Inventory /> },
+ { path: 'carts', element: <Carts /> },
+ { path: 'orders', element: <Orders /> },
+ { path: 'payments', element: <Payments /> },
+ { path: 'reviews', element: <Reviews /> },
+ { path: 'dashboard', element: <Dashboard /> },
+ ],
+ },
+ ]
+ }
+ ]
+ },
+ {
+ path: '/',
+ element: <GuestGuard />,
+ children: [
+ { path: 'login', element: <Login /> },
+ { path: 'signup', element: <Signup /> },
+ { path: 'forgot-password', element: <ForgotPassword /> },
+ { path: 'reset-password', element: <Navigate to="/forgot-password" replace /> },
+ ]
+ }
 ]);

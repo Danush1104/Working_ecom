@@ -2,15 +2,15 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 export function ScrollToTop() {
-  const { pathname } = useLocation();
+ const { pathname } = useLocation();
 
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'instant', // Do not smooth scroll on route change, it looks janky
-    });
-  }, [pathname]);
+ useEffect(() => {
+ window.scrollTo({
+ top: 0,
+ left: 0,
+ behavior: 'instant', // Do not smooth scroll on route change, it looks janky
+ });
+ }, [pathname]);
 
-  return null;
+ return null;
 }

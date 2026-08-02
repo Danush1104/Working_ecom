@@ -74,7 +74,7 @@ def validate_patch_product(data: Dict[str, Any]) -> None:
         raise ValidationError("Request body cannot be empty for partial updates", "INVALID_REQUEST")
         
     # Check that at least one updateable field is present
-    allowed_fields = {"name", "description", "category", "price", "image_url", "images", "is_featured"}
+    allowed_fields = {"name", "description", "category", "price", "image_url", "images", "is_featured", "is_active"}
     if not any(field in data for field in allowed_fields):
         raise ValidationError("At least one updateable field must be provided", "INVALID_REQUEST")
         
@@ -83,3 +83,4 @@ def validate_patch_product(data: Dict[str, Any]) -> None:
         raise ValidationError("Product ID is immutable and cannot be updated", "INVALID_REQUEST")
         
     _validate_common_fields(data)
+    print(f"DEBUG validate_patch_product final payload: {data}")

@@ -1,5 +1,5 @@
-export function SkeletonLoader({ className = '' }: { className?: string }) {
-  return (
-    <div className={`animate-pulse bg-gray-200 rounded-xl ${className}`} />
-  );
+export function SkeletonLoader({ className = ''}: { className?: string }) {
+ return (
+ <div className={`animate-pulse bg-bg-secondary rounded-xl ${className}`} />
+ );
 }

@@ -65,15 +65,15 @@ class ProductService:
             raise
 
     def get_product(self, product_id: str) -> Dict[str, Any]:
-        """Retrieves a product by ID. Raises NotFoundError if inactive or missing."""
+        """Retrieves a product by ID. Raises NotFoundError if missing."""
         product = self.repository.get_product(product_id)
-        if not product or not product.is_active:
+        if not product:
             raise NotFoundError(f"Product with ID {product_id} not found", ERROR_PRODUCT_NOT_FOUND)
         return product.to_dict()
 
-    def list_products(self) -> List[Dict[str, Any]]:
-        """Lists all active products."""
-        products = self.repository.list_products()
+    def list_products(self, include_inactive: bool = False) -> List[Dict[str, Any]]:
+        """Lists products. Filters out inactive unless include_inactive is True."""
+        products = self.repository.list_products(include_inactive=include_inactive)
         return [p.to_dict() for p in products]
 
     def update_product(self, product_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -119,11 +119,13 @@ class ProductService:
 
     def patch_product(self, product_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Performs a partial update (PATCH) of product details."""
+        print(f"DEBUG data: {data}")
         product_validator.validate_patch_product(data)
+        print(f"DEBUG validated_data: {data}")
 
         # Confirm existence
         existing = self.repository.get_product(product_id)
-        if not existing or not existing.is_active:
+        if not existing:
             raise NotFoundError(f"Product with ID {product_id} not found", ERROR_PRODUCT_NOT_FOUND)
 
         now = get_utc_timestamp()
@@ -143,7 +145,10 @@ class ProductService:
             update_fields["images"] = data["images"]
         if "is_featured" in data:
             update_fields["is_featured"] = bool(data["is_featured"])
+        if "is_active" in data:
+            update_fields["is_active"] = bool(data["is_active"])
 
+        print(f"DEBUG update_fields: {update_fields}")
         try:
             self.repository.update_product(product_id, update_fields)
             logger.info(f"Product updated partially: product_id={product_id}")
@@ -184,7 +189,8 @@ class ProductService:
         category: Optional[str] = None,
         keyword: Optional[str] = None,
         min_price: Optional[str] = None,
-        max_price: Optional[str] = None
+        max_price: Optional[str] = None,
+        include_inactive: bool = False
     ) -> List[Dict[str, Any]]:
         """Searches products with optional filters."""
         # Convert prices if specified
@@ -207,6 +213,7 @@ class ProductService:
             category=category,
             keyword=keyword,
             min_price=min_p,
-            max_price=max_p
+            max_price=max_p,
+            include_inactive=include_inactive
         )
         return [p.to_dict() for p in products]
