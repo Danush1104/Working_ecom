@@ -9,7 +9,7 @@ def validate_cart_item_input(data: Dict[str, Any]) -> None:
     for field in required_fields: 
         if field not in data or data[field] is None:
             raise ValidationError(f"Field '{field}' is required and cannot be null", "INVALID_REQUEST")
-            
+             
     # Validate user_id
     user_id = data["user_id"]
     if not isinstance(user_id, str) or not user_id.strip():
