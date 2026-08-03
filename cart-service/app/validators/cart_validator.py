@@ -6,7 +6,7 @@ def validate_cart_item_input(data: Dict[str, Any]) -> None:
     required_fields = ["user_id", "product_id", "quantity"]
     
     # Check for missing or null required fields
-    for field in required_fields:
+    for field in required_fields: 
         if field not in data or data[field] is None:
             raise ValidationError(f"Field '{field}' is required and cannot be null", "INVALID_REQUEST")
             
