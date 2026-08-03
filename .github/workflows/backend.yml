@@ -18,34 +18,48 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      services: ${{ steps.filter.outputs.changes }}
+      changed_services: ${{ steps.detect.outputs.changed_services }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Detect Changed Services
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          token: ${{ github.token }}
-          filters: |
-            product-service: 'product-service/**'
-            inventory-service: 'inventory-service/**'
-            cart-service: 'cart-service/**'
-            order-service: 'order-service/**'
-            payment-service: 'payment-service/**'
-            review-service: 'review-service/**'
-            wishlist-service: 'wishlist-service/**'
+        id: detect
+        run: |
+          # Get the list of changed files between current and previous commit
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git diff --name-only $(git hash-object -t tree /dev/null) HEAD)
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # Check which services have changes
+          SERVICES=()
+          for SERVICE in product-service inventory-service cart-service order-service payment-service review-service wishlist-service; do
+            if echo "$CHANGED_FILES" | grep -q "^${SERVICE}/"; then
+              SERVICES+=("\"$SERVICE\"")
+              echo "Detected change in: $SERVICE"
+            fi
+          done
+
+          # Build JSON array
+          if [ ${#SERVICES[@]} -eq 0 ]; then
+            JSON="[]"
+          else
+            JSON="[$(IFS=,; echo "${SERVICES[*]}")]"
+          fi
+
+          echo "Changed services JSON: $JSON"
+          echo "changed_services=$JSON" >> $GITHUB_OUTPUT
 
   test:
     needs: detect-changes
-    if: ${{ needs.detect-changes.outputs.services != '[]' && needs.detect-changes.outputs.services != '' }}
+    if: ${{ needs.detect-changes.outputs.changed_services != '[]' && needs.detect-changes.outputs.changed_services != '' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ fromJSON(needs.detect-changes.outputs.services) }}
+        service: ${{ fromJSON(needs.detect-changes.outputs.changed_services) }}
       fail-fast: false
     steps:
       - name: Checkout Code
@@ -66,13 +80,13 @@ jobs:
         run: |
           echo "Running tests for ${{ matrix.service }}..."
           cd ${{ matrix.service }}
-          
+
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           fi
-          
+
           pip install pytest
-          
+
           if [ -d tests ]; then
             python -m pytest tests/ -v
           else
@@ -81,11 +95,11 @@ jobs:
 
   deploy:
     needs: [detect-changes, test]
-    if: ${{ needs.detect-changes.outputs.services != '[]' && needs.detect-changes.outputs.services != '' }}
+    if: ${{ needs.detect-changes.outputs.changed_services != '[]' && needs.detect-changes.outputs.changed_services != '' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ fromJSON(needs.detect-changes.outputs.services) }}
+        service: ${{ fromJSON(needs.detect-changes.outputs.changed_services) }}
       fail-fast: false
     steps:
       - name: Checkout Code
@@ -100,34 +114,34 @@ jobs:
         run: |
           echo "Packaging ${{ matrix.service }}..."
           cd ${{ matrix.service }}
-          
+
           # Create a temporary deployment directory
           mkdir -p deploy_pkg
-          
+
           # Install dependencies if requirements.txt exists
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt -t deploy_pkg/
           fi
-          
+
           # Copy application code based on structure
           if [ -d app ]; then
             cp -r app deploy_pkg/
           else
             cp *.py deploy_pkg/ || true
           fi
-          
+
           # Create zip file
           cd deploy_pkg
           zip -r ../${{ matrix.service }}.zip .
           cd ..
-          
+
       - name: Validate Packaging
         run: |
           if [ ! -f "${{ matrix.service }}/${{ matrix.service }}.zip" ]; then
             echo "Error: Zip file was not created successfully."
             exit 1
           fi
-          
+
           SIZE=$(stat -c%s "${{ matrix.service }}/${{ matrix.service }}.zip")
           if [ $SIZE -lt 50 ]; then
             echo "Error: Zip file appears to be empty or corrupted."
@@ -149,11 +163,11 @@ jobs:
           SERVICE_NAME="${{ matrix.service }}"
           BASE_NAME=$(echo "$SERVICE_NAME" | tr '-' '_')
           FUNCTION_NAME="Danush_${BASE_NAME}"
-          
+
           echo "Deploying $SERVICE_NAME to AWS Lambda as $FUNCTION_NAME..."
           aws lambda update-function-code \
             --function-name $FUNCTION_NAME \
             --zip-file fileb://${SERVICE_NAME}/${SERVICE_NAME}.zip
-            
+
           # Wait for function update to complete to fail safely if there's an error
           aws lambda wait function-updated --function-name $FUNCTION_NAME
