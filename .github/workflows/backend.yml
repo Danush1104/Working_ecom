@@ -139,22 +139,12 @@ jobs:
           REPORT="snyk-${{ matrix.service }}.json"
           if [ -f "$REPORT" ]; then
             echo "=== Snyk Results for ${{ matrix.service }} ==="
-            python3 - <<'PYEOF'
-import json, sys
-with open("snyk-${{ matrix.service }}.json") as f:
-    data = json.load(f)
-vulns = data.get("vulnerabilities", [])
-if not vulns:
-    print("No high/critical vulnerabilities found.")
-else:
-    print(f"Found {len(vulns)} vulnerability/vulnerabilities:")
-    for v in vulns:
-        sev = v.get("severity", "").upper()
-        pkg = v.get("packageName", "")
-        ver = v.get("version", "")
-        title = v.get("title", "")
-        print(f"  [{sev}] {pkg} {ver} - {title}")
-PYEOF
+            if jq -e '.vulnerabilities | length == 0' "$REPORT" > /dev/null; then
+              echo "No high/critical vulnerabilities found."
+            else
+              echo "Found vulnerabilities:"
+              jq -r '.vulnerabilities[] | "  [\(.severity | ascii_upcase)] \(.packageName) \(.version) - \(.title)"' "$REPORT"
+            fi
           else
             echo "No Snyk report found for ${{ matrix.service }}."
           fi
