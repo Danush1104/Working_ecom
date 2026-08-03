@@ -93,8 +93,47 @@ jobs:
             echo "No tests directory found. Skipping tests."
           fi
 
+  security-scan:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.changed_services != '[]' && needs.detect-changes.outputs.changed_services != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJSON(needs.detect-changes.outputs.changed_services) }}
+      fail-fast: false
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          cd ${{ matrix.service }}
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Run Snyk to scan for vulnerabilities
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_KEY }}
+        with:
+          args: --file=${{ matrix.service }}/requirements.txt --severity-threshold=high
+        continue-on-error: true
+
+      - name: Upload Snyk report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+        continue-on-error: true
+
   deploy:
-    needs: [detect-changes, test]
+    needs: [detect-changes, test, security-scan]
     if: ${{ needs.detect-changes.outputs.changed_services != '[]' && needs.detect-changes.outputs.changed_services != '' }}
     runs-on: ubuntu-latest
     strategy:
