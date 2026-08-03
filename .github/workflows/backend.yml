@@ -35,8 +35,42 @@ jobs:
             review-service: 'review-service/**'
             wishlist-service: 'wishlist-service/**'
 
-  deploy:
+  test:
     needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.services != '[]' && needs.detect-changes.outputs.services != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJSON(needs.detect-changes.outputs.services) }}
+      fail-fast: false
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies and test
+        run: |
+          echo "Running tests for ${{ matrix.service }}..."
+          cd ${{ matrix.service }}
+          
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          
+          pip install pytest
+          
+          if [ -d tests ]; then
+            python -m pytest tests/ -v
+          else
+            echo "No tests directory found. Skipping tests."
+          fi
+
+  deploy:
+    needs: [detect-changes, test]
     if: ${{ needs.detect-changes.outputs.services != '[]' && needs.detect-changes.outputs.services != '' }}
     runs-on: ubuntu-latest
     strategy:
@@ -96,6 +130,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy to AWS Lambda
