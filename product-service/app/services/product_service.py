@@ -67,7 +67,7 @@ class ProductService:
     def get_product(self, product_id: str) -> Dict[str, Any]:
         """Retrieves a product by ID. Raises NotFoundError if missing."""
         product = self.repository.get_product(product_id)
-        if not product:
+        if not product or not product.is_active:
             raise NotFoundError(f"Product with ID {product_id} not found", ERROR_PRODUCT_NOT_FOUND)
         return product.to_dict()
 
