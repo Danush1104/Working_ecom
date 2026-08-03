@@ -10,7 +10,7 @@ _log_context: ContextVar[Dict[str, Any]] = ContextVar("log_context", default={})
 
 def clear_log_context() -> None:
     """Clears the logging context."""
-    _log_context.set({}) 
+    _log_context.set({})     
 
 def get_log_context() -> Dict[str, Any]:
     """Retrieves the current logging context."""

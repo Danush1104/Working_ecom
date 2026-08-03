@@ -110,27 +110,54 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_KEY }}
+
+      - name: Install service dependencies
         run: |
           cd ${{ matrix.service }}
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           fi
 
-      - name: Run Snyk to scan for vulnerabilities
-        uses: snyk/actions/python@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_KEY }}
-        with:
-          args: --file=${{ matrix.service }}/requirements.txt --severity-threshold=high
+      - name: Run Snyk Security Scan
+        run: |
+          echo "=== Snyk Security Scan: ${{ matrix.service }} ==="
+          snyk test \
+            --file=${{ matrix.service }}/requirements.txt \
+            --package-manager=pip \
+            --severity-threshold=high \
+            --json-file-output=snyk-${{ matrix.service }}.json
         continue-on-error: true
 
-      - name: Upload Snyk report
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Display Snyk Results Summary
         if: always()
+        run: |
+          if [ -f snyk-${{ matrix.service }}.json ]; then
+            echo "=== Snyk Results for ${{ matrix.service }} ==="
+            cat snyk-${{ matrix.service }}.json | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+vulns = data.get('vulnerabilities', [])
+if not vulns:
+    print('No high/critical vulnerabilities found.')
+else:
+    print(f'Found {len(vulns)} vulnerability/vulnerabilities:')
+    for v in vulns:
+        print(f'  [{v.get(\"severity\", \"\").upper()}] {v.get(\"packageName\")} {v.get(\"version\")} - {v.get(\"title\")}')
+" 2>/dev/null || echo "Scan complete. Check snyk-${{ matrix.service }}.json for details."
+          fi
+
+      - name: Upload Snyk JSON Report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: snyk.sarif
-        continue-on-error: true
+          name: snyk-report-${{ matrix.service }}
+          path: snyk-${{ matrix.service }}.json
+          if-no-files-found: ignore
 
   deploy:
     needs: [detect-changes, test, security-scan]
