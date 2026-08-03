@@ -1,0 +1,107 @@
+name: Deploy Backend Services
+
+on:
+  push:
+    branches:
+      - UI
+    paths:
+      - 'product-service/**'
+      - 'inventory-service/**'
+      - 'cart-service/**'
+      - 'order-service/**'
+      - 'payment-service/**'
+      - 'review-service/**'
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Detect Changed Services
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            product-service: 'product-service/**'
+            inventory-service: 'inventory-service/**'
+            cart-service: 'cart-service/**'
+            order-service: 'order-service/**'
+            payment-service: 'payment-service/**'
+            review-service: 'review-service/**'
+
+  deploy:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.services != '[]' && needs.detect-changes.outputs.services != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJSON(needs.detect-changes.outputs.services) }}
+      fail-fast: false
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Package Service
+        run: |
+          echo "Packaging ${{ matrix.service }}..."
+          cd ${{ matrix.service }}
+          
+          # Create a temporary deployment directory
+          mkdir -p deploy_pkg
+          
+          # Install dependencies if requirements.txt exists
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt -t deploy_pkg/
+          fi
+          
+          # Copy application code based on structure
+          if [ -d app ]; then
+            cp -r app deploy_pkg/
+          else
+            cp *.py deploy_pkg/ || true
+          fi
+          
+          # Create zip file
+          cd deploy_pkg
+          zip -r ../${{ matrix.service }}.zip .
+          cd ..
+          
+      - name: Validate Packaging
+        run: |
+          if [ ! -f "${{ matrix.service }}/${{ matrix.service }}.zip" ]; then
+            echo "Error: Zip file was not created successfully."
+            exit 1
+          fi
+          
+          SIZE=$(stat -c%s "${{ matrix.service }}/${{ matrix.service }}.zip")
+          if [ $SIZE -lt 50 ]; then
+            echo "Error: Zip file appears to be empty or corrupted."
+            exit 1
+          fi
+          echo "Packaging validation passed. Size: $SIZE bytes"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to AWS Lambda
+        run: |
+          echo "Deploying ${{ matrix.service }} to AWS Lambda..."
+          aws lambda update-function-code \
+            --function-name ${{ matrix.service }} \
+            --zip-file fileb://${{ matrix.service }}/${{ matrix.service }}.zip
+            
+          # Wait for function update to complete to fail safely if there's an error
+          aws lambda wait function-updated --function-name ${{ matrix.service }}
