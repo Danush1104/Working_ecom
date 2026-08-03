@@ -22,11 +22,14 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Detect Changed Services
         uses: dorny/paths-filter@v3
         id: filter
         with:
+          token: ${{ github.token }}
           filters: |
             product-service: 'product-service/**'
             inventory-service: 'inventory-service/**'
