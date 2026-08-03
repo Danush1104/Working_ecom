@@ -4,7 +4,7 @@ class AppError(Exception):
         super().__init__(message)
         self.message = message
         self.error_code = error_code 
-        self.status_code = status_code
+        self.status_code = status_code 
 
 
 class ValidationError(AppError):

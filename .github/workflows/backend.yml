@@ -3,7 +3,7 @@ name: Deploy Backend Services
 on:
   push:
     branches:
-      - UI
+      - main
     paths:
       - 'product-service/**'
       - 'inventory-service/**'
@@ -11,6 +11,7 @@ on:
       - 'order-service/**'
       - 'payment-service/**'
       - 'review-service/**'
+      - 'wishlist-service/**'
 
 jobs:
   detect-changes:
@@ -32,6 +33,7 @@ jobs:
             order-service: 'order-service/**'
             payment-service: 'payment-service/**'
             review-service: 'review-service/**'
+            wishlist-service: 'wishlist-service/**'
 
   deploy:
     needs: detect-changes
@@ -98,10 +100,15 @@ jobs:
 
       - name: Deploy to AWS Lambda
         run: |
-          echo "Deploying ${{ matrix.service }} to AWS Lambda..."
+          # Convert 'product-service' to 'Danush_product_service'
+          SERVICE_NAME="${{ matrix.service }}"
+          BASE_NAME=$(echo "$SERVICE_NAME" | tr '-' '_')
+          FUNCTION_NAME="Danush_${BASE_NAME}"
+          
+          echo "Deploying $SERVICE_NAME to AWS Lambda as $FUNCTION_NAME..."
           aws lambda update-function-code \
-            --function-name ${{ matrix.service }} \
-            --zip-file fileb://${{ matrix.service }}/${{ matrix.service }}.zip
+            --function-name $FUNCTION_NAME \
+            --zip-file fileb://${SERVICE_NAME}/${SERVICE_NAME}.zip
             
           # Wait for function update to complete to fail safely if there's an error
-          aws lambda wait function-updated --function-name ${{ matrix.service }}
+          aws lambda wait function-updated --function-name $FUNCTION_NAME
