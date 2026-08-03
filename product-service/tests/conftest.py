@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 import os
 from unittest.mock import MagicMock, patch
 
@@ -64,7 +64,7 @@ class FakeDynamoDBTable:
 def mock_dynamodb():
     fake_table = FakeDynamoDBTable()
     with patch("app.repositories.product_repository.get_products_table", return_value=fake_table):
-        with patch("app.services.category_service.CategoryService"): # Mock category service to avoid side effects
+        with patch("app.services.product_service.CategoryService"): # Mock category service to avoid side effects
             yield fake_table
 
 @pytest.fixture
