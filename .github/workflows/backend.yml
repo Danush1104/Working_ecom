@@ -136,19 +136,27 @@ jobs:
       - name: Display Snyk Results Summary
         if: always()
         run: |
-          if [ -f snyk-${{ matrix.service }}.json ]; then
+          REPORT="snyk-${{ matrix.service }}.json"
+          if [ -f "$REPORT" ]; then
             echo "=== Snyk Results for ${{ matrix.service }} ==="
-            cat snyk-${{ matrix.service }}.json | python3 -c "
+            python3 - <<'PYEOF'
 import json, sys
-data = json.load(sys.stdin)
-vulns = data.get('vulnerabilities', [])
+with open("snyk-${{ matrix.service }}.json") as f:
+    data = json.load(f)
+vulns = data.get("vulnerabilities", [])
 if not vulns:
-    print('No high/critical vulnerabilities found.')
+    print("No high/critical vulnerabilities found.")
 else:
-    print(f'Found {len(vulns)} vulnerability/vulnerabilities:')
+    print(f"Found {len(vulns)} vulnerability/vulnerabilities:")
     for v in vulns:
-        print(f'  [{v.get(\"severity\", \"\").upper()}] {v.get(\"packageName\")} {v.get(\"version\")} - {v.get(\"title\")}')
-" 2>/dev/null || echo "Scan complete. Check snyk-${{ matrix.service }}.json for details."
+        sev = v.get("severity", "").upper()
+        pkg = v.get("packageName", "")
+        ver = v.get("version", "")
+        title = v.get("title", "")
+        print(f"  [{sev}] {pkg} {ver} - {title}")
+PYEOF
+          else
+            echo "No Snyk report found for ${{ matrix.service }}."
           fi
 
       - name: Upload Snyk JSON Report
