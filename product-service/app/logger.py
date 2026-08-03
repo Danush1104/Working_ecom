@@ -3,7 +3,7 @@ import logging
 import time
 from contextvars import ContextVar
 from typing import Any, Dict
-from app.config import Config
+from app.config import Config 
  
 # Context variables to store request-specific logging context
 _log_context: ContextVar[Dict[str, Any]] = ContextVar("log_context", default={})
