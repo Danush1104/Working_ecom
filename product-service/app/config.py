@@ -4,7 +4,7 @@ try:
     # Load .env file for local development
     load_dotenv()
 except ImportError:
-    pass
+    pass  
 
 class Config:
     AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-1")

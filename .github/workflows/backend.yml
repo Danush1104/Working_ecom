@@ -16,7 +16,7 @@ on:
 
 jobs:
   detect-changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest       
     outputs:
       changed_services: ${{ steps.detect.outputs.changed_services }}
     steps:
@@ -110,8 +110,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Snyk CLI
-        run: npm install -g snyk
+      - name: Install Snyk CLI and HTML Reporter
+        run: npm install -g snyk snyk-to-html
 
       - name: Authenticate Snyk
         run: snyk auth ${{ secrets.SNYK_KEY }}
@@ -149,12 +149,19 @@ jobs:
             echo "No Snyk report found for ${{ matrix.service }}."
           fi
 
-      - name: Upload Snyk JSON Report
+      - name: Generate HTML Report
+        if: always()
+        run: |
+          if [ -f snyk-${{ matrix.service }}.json ]; then
+            snyk-to-html -i snyk-${{ matrix.service }}.json -o snyk-${{ matrix.service }}.html
+          fi
+
+      - name: Upload Snyk HTML Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: snyk-report-${{ matrix.service }}
-          path: snyk-${{ matrix.service }}.json
+          path: snyk-${{ matrix.service }}.html
           if-no-files-found: ignore
 
   deploy:
