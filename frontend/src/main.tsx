@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import { configureAmplify } from './aws-config'
 
-configureAmplify();
+configureAmplify();  
 
 createRoot(document.getElementById('root')!).render(
  <StrictMode>
