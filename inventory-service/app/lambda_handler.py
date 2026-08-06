@@ -1,4 +1,9 @@
 import time
+try:
+    from aws_xray_sdk.core import patch_all
+    patch_all()
+except Exception:
+    pass
 from typing import Any, Dict
 from app.router import route_request
 from app.events.consumer import consume_sqs_events
@@ -88,3 +93,4 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             error_code="INTERNAL_SERVER_ERROR",
             status_code=500
         )
+
