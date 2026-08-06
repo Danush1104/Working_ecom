@@ -171,7 +171,23 @@ class ProductRepository:
                 if expression_attribute_names:
                     query_kwargs["ExpressionAttributeNames"] = expression_attribute_names
                 
-                response = self.table.query(**query_kwargs)
+                try:
+                    response = self.table.query(**query_kwargs)
+                except ClientError as ce:
+                    if ce.response["Error"]["Code"] == "ValidationException" and "index" in ce.response["Error"]["Message"].lower():
+                        logger.warning("category-index GSI missing. Falling back to scan.")
+                        # Fallback to scan if index is missing
+                        scan_kwargs = {}
+                        fallback_filters = ["category = :category"]
+                        if filter_expression_str:
+                            fallback_filters.append(f"({filter_expression_str})")
+                        scan_kwargs["FilterExpression"] = " AND ".join(fallback_filters)
+                        scan_kwargs["ExpressionAttributeValues"] = query_kwargs["ExpressionAttributeValues"]
+                        if expression_attribute_names:
+                            scan_kwargs["ExpressionAttributeNames"] = expression_attribute_names
+                        response = self.table.scan(**scan_kwargs)
+                    else:
+                        raise ce
             else:
                 # Scan table (since category partition key is missing)
                 scan_kwargs = {}
