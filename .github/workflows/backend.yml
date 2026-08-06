@@ -19,12 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
         with:
           fetch-depth: 0
       
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@ba3875ecf642b2129de2b589510c81a8b53dbf4e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -35,7 +35,7 @@ jobs:
       changed_services: ${{ steps.detect.outputs.changed_services }}   #detect-changes 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4 
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a 
         with:
           fetch-depth: 2    #fetches last two pushes to compare changes between current and previous commit
 
@@ -80,10 +80,10 @@ jobs:
       fail-fast: false #prevents github from cancelling other matrixes if one service fails
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
 
       - name: Set up Python
-        uses: actions/setup-python@v5 #installs python version 3.12
+        uses: actions/setup-python@8549b9f8f590ad24eab7482f36f6e1e24d34597b #installs python version 3.12
         with:
           python-version: '3.12'
 
@@ -120,10 +120,10 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@8549b9f8f590ad24eab7482f36f6e1e24d34597b
         with:
           python-version: '3.12'
 
@@ -175,7 +175,7 @@ jobs:
 
       - name: Upload Snyk HTML Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: snyk-report-${{ matrix.service }}
           path: snyk-${{ matrix.service }}.html
@@ -191,10 +191,10 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@8549b9f8f590ad24eab7482f36f6e1e24d34597b
         with:
           python-version: '3.12'
 
@@ -238,7 +238,7 @@ jobs:
           echo "Packaging validation passed. Size: $SIZE bytes"
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@0802eece3e41d56906971d94b32d33e05fc4a14c
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

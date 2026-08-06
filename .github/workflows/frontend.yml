@@ -13,12 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
         with:
           fetch-depth: 0
       
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@ba3875ecf642b2129de2b589510c81a8b53dbf4e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -27,10 +27,10 @@ jobs:
     runs-on: ubuntu-latest  #Github hostedUbuntu VM
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4 #checkout - pulls code into runnner
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a #checkout - pulls code into runnner
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4    #setup - installs node 20 version 
+        uses: actions/setup-node@e51e5fe84fc33b4c73ebe40526b2694712b5b858    #setup - installs node 20 version 
         with:
           node-version: '20'
           cache: 'npm'
@@ -47,7 +47,7 @@ jobs:
           npm run build
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@0802eece3e41d56906971d94b32d33e05fc4a14c
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
