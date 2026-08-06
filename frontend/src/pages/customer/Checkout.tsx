@@ -11,6 +11,8 @@ import { PriceTag } from '../../components/ui/PriceTag';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { formatCurrency } from '../../utils/currency';
 
+//Payment methods
+
 const PAYMENT_METHODS = [
  { id: 'CARD', label: 'Credit / Debit Card', icon: CreditCard },
  { id: 'UPI', label: 'UPI', icon: Smartphone },

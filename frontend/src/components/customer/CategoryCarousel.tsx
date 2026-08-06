@@ -45,7 +45,30 @@ export function CategoryCarousel({ categories, activeCategory, onCategorySelect 
  display_order: 0
  } as Category;
 
- const displayCategories = [allCategoryItem, ...deduplicatedCategories].sort((a, b) => (a.display_order || 99) - (b.display_order || 99));
+ const PREDEFINED_ORDER = [
+   "Electronics",
+   "Fashion",
+   "Home & Kitchen",
+   "Beauty",
+   "Sports",
+   "Books",
+   "Toys",
+   "Automotive",
+   "Groceries"
+ ];
+
+ const sortedCategories = [...deduplicatedCategories].sort((a, b) => {
+   const indexA = PREDEFINED_ORDER.indexOf(a.name);
+   const indexB = PREDEFINED_ORDER.indexOf(b.name);
+   
+   if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+   if (indexA !== -1) return -1;
+   if (indexB !== -1) return 1;
+   
+   return (a.display_order || 999) - (b.display_order || 999);
+ });
+
+ const displayCategories = [allCategoryItem, ...sortedCategories];
 
  return (
   <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
@@ -63,7 +86,7 @@ export function CategoryCarousel({ categories, activeCategory, onCategorySelect 
   {/* Scrollable Container */}
   <div 
   ref={scrollContainerRef}
-  className="flex items-center justify-start sm:justify-center flex-1 gap-6 sm:gap-10 overflow-x-auto scrollbar-hide px-8 scroll-smooth"
+  className="flex items-center justify-start sm:justify-center flex-1 gap-6 sm:gap-10 overflow-x-auto scrollbar-hide px-16 sm:px-20 scroll-smooth"
   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none'}}
   >
   {displayCategories.map((cat) => {
