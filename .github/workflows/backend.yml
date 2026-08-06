@@ -243,6 +243,9 @@ jobs:
             --function-name $FUNCTION_NAME \
             --zip-file fileb://${SERVICE_NAME}/${SERVICE_NAME}.zip
 
+          # Wait for the code update to complete to avoid ResourceConflictException
+          aws lambda wait function-updated --function-name $FUNCTION_NAME
+
           # Enable AWS X-Ray Active Tracing on the Lambda function
           aws lambda update-function-configuration \
             --function-name $FUNCTION_NAME \
