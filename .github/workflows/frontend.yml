@@ -1,7 +1,7 @@
-name: Deploy Frontend
+name: Deploy Frontend #Human readable name for the workflow
 
 on:
-  push:
+  push:   #Runs only when files under frontend changes
     branches:
       - main
       - UI
@@ -9,14 +9,14 @@ on:
       - 'frontend/**'
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+  build-and-deploy: #name of job
+    runs-on: ubuntu-latest  #Github hostedUbuntu VM
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 #checkout - pulls code into runnner
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4    #setup - installs node 20 version 
         with:
           node-version: '20'
           cache: 'npm'
@@ -25,7 +25,7 @@ jobs:
       - name: Install Dependencies
         run: |
           cd frontend
-          npm ci
+          npm ci          #installs exact versions of dependencies from package-lock.json 
 
       - name: Build Frontend
         run: |
@@ -42,8 +42,10 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          # Sync the dist folder to the S3 bucket, deleting old files that no longer exist
-          aws s3 sync frontend/dist/ s3://${{ secrets.AWS_S3_BUCKET_NAME }} --delete
+          # Sync assets with long-term caching (preserving existing hashed assets)
+          aws s3 sync frontend/dist/ s3://${{ secrets.AWS_S3_BUCKET_NAME }} --exclude "index.html"
+          # Sync index.html with no-cache header so users always fetch the latest bundle pointers
+          aws s3 cp frontend/dist/index.html s3://${{ secrets.AWS_S3_BUCKET_NAME }}/index.html --cache-control "no-cache, no-store, must-revalidate"
 
       - name: Invalidate CloudFront Cache
         run: |

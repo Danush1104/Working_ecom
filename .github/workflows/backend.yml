@@ -18,12 +18,12 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest       
     outputs:
-      changed_services: ${{ steps.detect.outputs.changed_services }}
+      changed_services: ${{ steps.detect.outputs.changed_services }}   #detect-changes 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 
         with:
-          fetch-depth: 2
+          fetch-depth: 2    #fetches last two pushes to compare changes between current and previous commit
 
       - name: Detect Changed Services
         id: detect
@@ -32,10 +32,13 @@ jobs:
           CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git diff --name-only $(git hash-object -t tree /dev/null) HEAD)
 
           echo "Changed files:"
-          echo "$CHANGED_FILES"
+          echo "$CHANGED_FILES"   #prints changed files
 
-          # Check which services have changes
+          # Creates empty bash array to store changed services 
           SERVICES=()
+
+          # Loop through each service and check if it has changed and then append to services array
+    
           for SERVICE in product-service inventory-service cart-service order-service payment-service review-service wishlist-service; do
             if echo "$CHANGED_FILES" | grep -q "^${SERVICE}/"; then
               SERVICES+=("\"$SERVICE\"")
@@ -43,7 +46,7 @@ jobs:
             fi
           done
 
-          # Build JSON array
+          # Build JSON array and appends GITHUB OUTPUT environment file so subsequent jobs can read
           if [ ${#SERVICES[@]} -eq 0 ]; then
             JSON="[]"
           else
@@ -54,19 +57,19 @@ jobs:
           echo "changed_services=$JSON" >> $GITHUB_OUTPUT
 
   test:
-    needs: detect-changes
+    needs: detect-changes   #waits till detect-changes job is completed
     if: ${{ needs.detect-changes.outputs.changed_services != '[]' && needs.detect-changes.outputs.changed_services != '' }}
     runs-on: ubuntu-latest
     strategy:
-      matrix:
+      matrix: #creates parallel runner for each modified service in job 1
         service: ${{ fromJSON(needs.detect-changes.outputs.changed_services) }}
-      fail-fast: false
+      fail-fast: false #prevents github from cancelling other matrixes if one service fails
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5 #installs python version 3.12
         with:
           python-version: '3.12'
 
@@ -88,7 +91,7 @@ jobs:
           pip install pytest
 
           if [ -d tests ]; then
-            python -m pytest tests/ -v
+            python -m pytest tests/ -v  #executes unit test inside tests folder 
           else
             echo "No tests directory found. Skipping tests."
           fi
@@ -239,6 +242,11 @@ jobs:
           aws lambda update-function-code \
             --function-name $FUNCTION_NAME \
             --zip-file fileb://${SERVICE_NAME}/${SERVICE_NAME}.zip
+
+          # Enable AWS X-Ray Active Tracing on the Lambda function
+          aws lambda update-function-configuration \
+            --function-name $FUNCTION_NAME \
+            --tracing-config Mode=Active
 
           # Wait for function update to complete to fail safely if there's an error
           aws lambda wait function-updated --function-name $FUNCTION_NAME

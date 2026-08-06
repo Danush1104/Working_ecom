@@ -24,10 +24,11 @@ import {
  BarChart, Bar, Cell
 } from 'recharts';
 import { StatusBadge } from '../../components/admin/StatusBadge';
+import { DashboardStatSkeleton } from '../../components/ui/Skeleton';
 
 export default function Dashboard() {
- const { data: products = [] } = useProducts(true);
- const { data: orders = [] } = useAdminOrders();
+ const { data: products = [], isLoading: isLoadingProd } = useProducts(true);
+ const { data: orders = [], isLoading: isLoadingOrders } = useAdminOrders();
  const { data: payments = [] } = useAdminPayments();
  const { data: inventory = [] } = useInventory();
  const { data: reviews = [] } = useAllReviews();
@@ -117,29 +118,35 @@ export default function Dashboard() {
 
  {/* KPIs */}
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
- <MetricCard 
- title="Total Revenue" 
- value={`${formatCurrency(totalRevenue)}`} 
- icon={<DollarSign className="h-5 w-5" />} 
- trend={{ value: '+12.5%', isPositive: true }}
- />
- <MetricCard 
- title="Total Orders" 
- value={totalOrders} 
- icon={<ShoppingBag className="h-5 w-5" />} 
- trend={{ value: '+8.2%', isPositive: true }}
- />
- <MetricCard 
- title="Active Products" 
- value={totalProducts} 
- icon={<Package className="h-5 w-5" />} 
- />
- <MetricCard 
- title="Low Stock Alerts" 
- value={lowStockCount} 
- icon={<AlertTriangle className="h-5 w-5" />} 
- trend={{ value: '-2', isPositive: true }}
- />
+ {isLoadingProd || isLoadingOrders ? (
+  Array.from({ length: 4 }).map((_, i) => <DashboardStatSkeleton key={i} />)
+ ) : (
+  <>
+  <MetricCard 
+  title="Total Revenue" 
+  value={`${formatCurrency(totalRevenue)}`} 
+  icon={<DollarSign className="h-5 w-5" />} 
+  trend={{ value: '+12.5%', isPositive: true }}
+  />
+  <MetricCard 
+  title="Total Orders" 
+  value={totalOrders} 
+  icon={<ShoppingBag className="h-5 w-5" />} 
+  trend={{ value: '+8.2%', isPositive: true }}
+  />
+  <MetricCard 
+  title="Active Products" 
+  value={totalProducts} 
+  icon={<Package className="h-5 w-5" />} 
+  />
+  <MetricCard 
+  title="Low Stock Alerts" 
+  value={lowStockCount} 
+  icon={<AlertTriangle className="h-5 w-5" />} 
+  trend={{ value: '-2', isPositive: true }}
+  />
+  </>
+ )}
  </div>
 
  {/* Main Analytics */}

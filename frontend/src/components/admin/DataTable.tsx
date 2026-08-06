@@ -12,11 +12,16 @@ interface DataTableProps<T> {
  data: T[];
  keyExtractor: (item: T) => string;
  onRowClick?: (item: T) => void;
+ isLoading?: boolean;
+ isFetching?: boolean;
 }
 
-export function DataTable<T>({ columns, data, keyExtractor, onRowClick }: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, keyExtractor, onRowClick, isLoading = false, isFetching = false }: DataTableProps<T>) {
  return (
- <div className="bg-bg-card/40 backdrop-blur-xl rounded-2xl border border-border-subtle overflow-hidden shadow-soft">
+ <div className="bg-bg-card/40 backdrop-blur-xl rounded-2xl border border-border-subtle overflow-hidden shadow-soft relative">
+ {isFetching && !isLoading && (
+  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-cyan-400 to-primary animate-pulse z-10" />
+ )}
  <div className="overflow-x-auto">
  <table className="w-full text-left border-collapse">
  <thead>
@@ -29,7 +34,19 @@ export function DataTable<T>({ columns, data, keyExtractor, onRowClick }: DataTa
  </tr>
  </thead>
  <tbody className="divide-y divide-border-subtle">
- {data.length === 0 ? (
+ {isLoading ? (
+  Array.from({ length: 5 }).map((_, rowIdx) => (
+    <tr key={rowIdx} className="animate-pulse">
+      {columns.map((_, colIdx) => (
+        <td key={colIdx} className="px-5 py-4">
+          <div className="h-5 bg-bg-secondary rounded-lg w-full max-w-[120px] relative overflow-hidden">
+            <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/30 dark:via-white/10 to-transparent" />
+          </div>
+        </td>
+      ))}
+    </tr>
+  ))
+) : data.length === 0 ? (
  <tr>
  <td colSpan={columns.length} className="px-6 py-12 text-center text-text-secondary">
  No data available.

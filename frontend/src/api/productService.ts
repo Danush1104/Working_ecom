@@ -21,9 +21,11 @@ const PRODUCT_API_URL = import.meta.env.VITE_PRODUCT_SERVICE_URL;
 
 export const productService = {
  getProducts: async (includeInactive: boolean = false): Promise<Product[]> => {
- const response = await apiClient.get(PRODUCT_API_URL, {
- params: includeInactive ? { include_inactive: 'true'} : undefined
- });
+    const params: any = { _t: Date.now() };
+    if (includeInactive) {
+      params.include_inactive = 'true';
+    }
+    const response = await apiClient.get(PRODUCT_API_URL, { params });
  const getFallbackImage = (category: string) => {
  const map: Record<string, string> = {
  'Mobiles': 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop',
@@ -75,9 +77,11 @@ export const productService = {
  },
 
  searchProducts: async (query: string, includeInactive: boolean = false): Promise<Product[]> => {
- const response = await apiClient.get(`${PRODUCT_API_URL}/search`, {
- params: { q: query, ...(includeInactive && { include_inactive: 'true'}) }
- });
+    const params: any = { q: query, _t: Date.now() };
+    if (includeInactive) {
+      params.include_inactive = 'true';
+    }
+    const response = await apiClient.get(`${PRODUCT_API_URL}/search`, { params });
  const getFallbackImage = (category: string) => {
  const map: Record<string, string> = {
  'Mobiles': 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop',

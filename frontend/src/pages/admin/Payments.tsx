@@ -88,7 +88,7 @@ export default function Payments() {
  header: 'Date', 
  accessor: (item: any) => {
  if (!item.created_at) return 'N/A';
- const sanitized = item.created_at.replace('', 'T').replace(',', '.');
+ const sanitized = item.created_at.replace(' ', 'T').replace(',', '.');
  const d = new Date(sanitized);
  if (isNaN(d.getTime())) return 'Invalid Date';
  return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });

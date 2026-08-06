@@ -2,10 +2,13 @@ from typing import Any, Dict
 from app.services.product_service import ProductService
 from app.errors import ValidationError
 from app.response import success_response
+from app.utils.auth import require_admin
+
 def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    require_admin(event)
     """
-    Handler for GET /api/products/{product_id}.
-    Retrieves a single product.
+    Handler for DELETE /api/products/{product_id}.
+    Soft deletes a product by setting is_active to False.
     """
     path_parameters = event.get("pathParameters") or {}
     product_id = path_parameters.get("product_id")
@@ -14,12 +17,8 @@ def handle(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         raise ValidationError("Product ID path parameter is required", "INVALID_REQUEST")
         
     service = ProductService()
-    product_data = service.get_product(product_id)
+    service.delete_product(product_id)
     
     return success_response(
-        message="Product retrieved successfully",
-        data=product_data,
-        headers={
-            "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600"
-        }
+        message="Product deleted successfully"
     )

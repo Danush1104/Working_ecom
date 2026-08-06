@@ -25,9 +25,18 @@ function OrderPaymentRow({ orderId, orderTotal, created_at }: { orderId: string,
   
   if (isLoading) {
     return (
-      <div className="flex items-center justify-between p-4 rounded-2xl border border-border-subtle hover:bg-bg-secondary/50 transition-colors">
-        <Skeleton className="h-6 w-1/3" />
-        <Skeleton className="h-6 w-1/4" />
+      <div className="p-4 rounded-2xl border border-border-subtle bg-bg-secondary/30 animate-pulse space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <Skeleton className="w-8 h-8 rounded-xl shrink-0" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+          <Skeleton className="h-5 w-16 shrink-0" />
+        </div>
+        <div className="flex items-center justify-between pt-2 border-t border-border-subtle/30">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-4 w-16" />
+        </div>
       </div>
     );
   }
@@ -36,40 +45,63 @@ function OrderPaymentRow({ orderId, orderTotal, created_at }: { orderId: string,
 
   if (!latestPayment) {
     return (
-      <div className="flex items-center justify-between p-4 rounded-2xl border border-border-subtle bg-bg-secondary/20">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-border-subtle rounded-full text-text-secondary">
-            <CreditCard className="w-5 h-5" />
+      <div className="p-4 rounded-2xl border border-border-subtle bg-bg-card hover:bg-bg-secondary/40 transition-all space-y-3 overflow-hidden">
+        {/* Top Row: Icon + Title + Status */}
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="p-2 bg-bg-secondary rounded-xl text-text-secondary shrink-0 border border-border-subtle">
+              <CreditCard className="w-4 h-4" />
+            </div>
+            <p className="text-xs font-semibold text-text-primary truncate" title={`Order ${orderId}`}>
+              Order {shortOrderId(orderId)}
+            </p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-text-primary">Payment</p>
-            <p className="text-xs text-text-secondary">Order {shortOrderId(orderId)}</p>
+          <div className="shrink-0">
+            <StatusBadge status="PENDING" />
           </div>
         </div>
-        <span className="font-semibold text-text-primary">{formatCurrency(orderTotal)}</span>
+
+        {/* Bottom Row: Date + Amount */}
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-subtle/40 text-xs">
+          <span className="text-text-secondary whitespace-nowrap font-medium">
+            {safeFormatDate(created_at)}
+          </span>
+          <span className="font-semibold text-text-primary font-mono text-right whitespace-nowrap">
+            {formatCurrency(orderTotal)}
+          </span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border-subtle hover:bg-bg-secondary/50 transition-all gap-4">
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0">
-          <CreditCard className="w-5 h-5" />
-        </div>
-        <div className="min-w-0 flex-1">
+    <div className="p-4 rounded-2xl border border-border-subtle bg-bg-card hover:bg-bg-secondary/40 transition-all space-y-3 overflow-hidden">
+      {/* Top Row: Icon + Payment ID + Status */}
+      <div className="flex items-center justify-between gap-2 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="p-2 bg-primary/10 rounded-xl text-primary shrink-0 border border-primary/20">
+            <CreditCard className="w-4 h-4" />
+          </div>
           <p 
             title={latestPayment.payment_id}
-            className="text-sm font-medium text-text-primary font-mono truncate overflow-hidden text-ellipsis min-w-0"
+            className="text-xs font-semibold font-mono text-text-primary truncate"
           >
-            {latestPayment.payment_id}
+            {shortOrderId(latestPayment.payment_id)}
           </p>
-          <p className="text-xs text-text-secondary">{safeFormatDate(latestPayment.updated_at || created_at)}</p>
+        </div>
+        <div className="shrink-0">
+          <StatusBadge status={latestPayment.payment_status} />
         </div>
       </div>
-      <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 min-w-max">
-        <span className="font-semibold text-text-primary">{formatCurrency(latestPayment.amount)}</span>
-        <StatusBadge status={latestPayment.payment_status} />
+
+      {/* Bottom Row: Date (Left) + Amount (Right) */}
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-subtle/40 text-xs">
+        <span className="text-text-secondary whitespace-nowrap font-medium">
+          {safeFormatDate(latestPayment.updated_at || created_at)}
+        </span>
+        <span className="font-semibold text-text-primary font-mono text-right whitespace-nowrap">
+          {formatCurrency(latestPayment.amount)}
+        </span>
       </div>
     </div>
   );
@@ -153,18 +185,18 @@ export default function Profile() {
           </div>
 
           {/* Payments Section */}
-          <div className="bg-bg-card rounded-[32px] p-6 sm:p-8 shadow-soft border border-border-subtle relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all flex flex-col h-[400px]">
+          <div className="bg-bg-card rounded-[32px] p-6 sm:p-8 shadow-soft border border-border-subtle relative overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all flex flex-col">
             <div className="flex items-center justify-between mb-6 shrink-0">
               <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-primary" /> Payment History
               </h2>
             </div>
             
-            <div className="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-2">
+            <div className="space-y-3 max-h-[460px] overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden flex-1">
               {isLoadingOrders ? (
                 <>
-                  <Skeleton className="h-16 w-full rounded-2xl !bg-bg-secondary" />
-                  <Skeleton className="h-16 w-full rounded-2xl !bg-bg-secondary" />
+                  <Skeleton className="h-20 w-full rounded-2xl !bg-bg-secondary" />
+                  <Skeleton className="h-20 w-full rounded-2xl !bg-bg-secondary" />
                 </>
               ) : recentOrders.length === 0 ? (
                 <div className="text-center py-8">

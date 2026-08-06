@@ -26,8 +26,7 @@ const Orders = lazy(() => import('../pages/admin/Orders'));
 const Payments = lazy(() => import('../pages/admin/Payments'));
 const Reviews = lazy(() => import('../pages/admin/Reviews'));
 
-const Login = lazy(() => import('../pages/auth/Login'));
-const Signup = lazy(() => import('../pages/auth/Signup'));
+const AuthPage = lazy(() => import('../pages/auth/AuthPage'));
 const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
 
 export const router = createBrowserRouter([
@@ -80,8 +79,8 @@ export const router = createBrowserRouter([
  path: '/',
  element: <GuestGuard />,
  children: [
- { path: 'login', element: <Login /> },
- { path: 'signup', element: <Signup /> },
+ { path: 'login', element: <AuthPage /> },
+ { path: 'signup', element: <AuthPage /> },
  { path: 'forgot-password', element: <ForgotPassword /> },
  { path: 'reset-password', element: <Navigate to="/forgot-password" replace /> },
  ]

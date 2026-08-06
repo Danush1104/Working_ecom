@@ -4,7 +4,7 @@ import { ShoppingBag, Package, X, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useOrders, useCancelOrder } from '../../hooks/useOrders';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { Skeleton } from '../../components/ui/Skeleton';
+import { Skeleton, OrderCardSkeleton } from '../../components/ui/Skeleton';
 import type { Order } from '../../api/orderService';
 import { StatusBadge } from '../../components/admin/StatusBadge';
 import { usePaymentsByOrder, useCreatePayment } from '../../hooks/usePayments';
@@ -64,7 +64,7 @@ export default function Orders() {
  <div className="max-w-3xl mx-auto px-4 py-16 space-y-6">
  <Skeleton className="h-10 w-48 mb-10 !bg-bg-card" />
  {[1, 2, 3].map(i => (
- <Skeleton key={i} className="h-40 w-full rounded-[32px] !bg-bg-card" />
+ <OrderCardSkeleton key={i} />
  ))}
  </div>
  );

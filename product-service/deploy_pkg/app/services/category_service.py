@@ -34,7 +34,40 @@ class CategoryService:
         return category
 
     def list_categories(self) -> List[Category]:
-        return self.category_repo.list_categories()
+        categories = self.category_repo.list_categories()
+        existing_names = {c.name for c in categories}
+        
+        default_categories = [
+            {"name": "Audio", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Audio"},
+            {"name": "PC & Accessories", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=PC"},
+            {"name": "Mobiles", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Mobiles"},
+            {"name": "Home Appliances", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Home"},
+            {"name": "Gaming", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Gaming"},
+            {"name": "Cameras", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Camera"},
+            {"name": "Laptops", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Laptops"},
+            {"name": "Wearables", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Watch"},
+            {"name": "Beauty Products", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Beauty"},
+            {"name": "Electronics", "icon": "https://placehold.co/100x100/1e3a8a/ffffff?text=Tech"}
+        ]
+        
+        added_new = False
+        for idx, cat in enumerate(default_categories):
+            if cat["name"] not in existing_names:
+                try:
+                    self.create_category(
+                        name=cat["name"], 
+                        description=f"Default category: {cat['name']}",
+                        icon_url=cat["icon"],
+                        display_order=idx + 1
+                    )
+                    added_new = True
+                except ConflictError:
+                    pass
+        
+        if added_new:
+            categories = self.category_repo.list_categories()
+                
+        return categories
     def update_category(self, category_id: str, updates: Dict[str, Any]) -> Category:
         self.get_category(category_id)  # Validate exists
         

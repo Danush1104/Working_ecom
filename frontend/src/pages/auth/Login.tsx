@@ -49,7 +49,7 @@ export default function Login() {
  };
 
  return (
- <div className="h-screen w-full flex bg-[#F7F8FA] overflow-hidden font-sans">
+ <div className="h-screen w-full flex bg-bg-primary overflow-hidden font-sans">
  
  {/* LEFT SIDE - Hero Section */}
  <div className="hidden lg:flex w-1/2 relative bg-bg-primary overflow-hidden">

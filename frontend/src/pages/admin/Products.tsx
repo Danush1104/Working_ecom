@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Edit2, Trash2, Loader2, Power, Eye } from 'lucide-react';
+import { Edit2, Trash2, Power, Eye } from 'lucide-react';
 import { DataTable } from '../../components/admin/DataTable';
 import { FilterBar } from '../../components/admin/FilterBar';
 import { FilterDrawer } from '../../components/admin/FilterDrawer';
@@ -16,7 +16,7 @@ import { Pagination } from '../../components/ui/Pagination';
 import { exportToCSV } from '../../utils/csv';
 
 export default function Products() {
- const { data: products, isLoading, isError } = useProducts(true);
+ const { data: products, isLoading, isError, isFetching } = useProducts(true);
  const createProduct = useCreateProduct();
  const updateProduct = useUpdateProduct();
  const deleteProduct = useDeleteProduct();
@@ -68,24 +68,34 @@ export default function Products() {
  patchProduct.mutate({ id: product.id, data: { is_active: !product.is_active } });
  };
 
- const handleSave = (data: ProductFormData) => {
- const payload = {
- ...data,
- price: Number(data.price)
- };
+ const handleSave = async (data: ProductFormData) => {
+    const payload = {
+      ...data,
+      price: Number(data.price)
+    };
 
- if (selectedProduct) {
- updateProduct.mutate({ id: selectedProduct.id, data: payload });
- } else {
- createProduct.mutate(payload);
- }
- };
+    try {
+      if (selectedProduct) {
+        await updateProduct.mutateAsync({ id: selectedProduct.id, data: payload });
+      } else {
+        await createProduct.mutateAsync(payload);
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
- const confirmDelete = () => {
- if (selectedProduct) {
- deleteProduct.mutate(selectedProduct.id);
- }
- };
+  const confirmDelete = async () => {
+    if (selectedProduct) {
+      try {
+        await deleteProduct.mutateAsync(selectedProduct.id);
+        setIsDeleteDialogOpen(false);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
 
  const columns: any[] = [
  {
@@ -176,11 +186,7 @@ export default function Products() {
  </div>
  </FilterDrawer>
 
- {isLoading ? (
- <div className="flex items-center justify-center py-12">
- <Loader2 className="h-8 w-8 animate-spin text-primary" />
- </div>
- ) : isError ? (
+ {isError ? (
  <div className="text-center py-10 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20">
  <p className="text-red-500 font-medium">Failed to load products. Please check the backend connection.</p>
  </div>
@@ -190,6 +196,8 @@ export default function Products() {
  columns={columns} 
  data={paginatedProducts} 
  keyExtractor={(item) => item.id} 
+ isLoading={isLoading}
+ isFetching={isFetching || updateProduct.isPending || patchProduct.isPending || deleteProduct.isPending || createProduct.isPending}
  />
  
  {totalPages > 1 && (
@@ -213,6 +221,7 @@ export default function Products() {
  price: selectedProduct.price.toString()
  } : null}
  title={selectedProduct ? 'Edit Product': 'Add Product'}
+ isLoading={createProduct.isPending || updateProduct.isPending}
  />
 
  <ViewModal
