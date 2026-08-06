@@ -15,7 +15,7 @@ from app.handlers import (
 )
 from app.errors import NotFoundError
 
-# Compile regex patterns for routing
+# Compile regex patterns for routing calls
 ROUTE_PATTERNS = [
     # Categories
     ("GET", re.compile(r"^/api/categories/?$"), get_categories.handle),
