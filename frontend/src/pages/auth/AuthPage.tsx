@@ -203,35 +203,6 @@ export default function AuthPage() {
               </h2>
               <p className="text-text-secondary mt-2 mb-8 text-[15px]">Login to continue to your account</p>
 
-              {/* Role Toggle */}
-              <div className="mb-6">
-                <label className="block text-[13px] font-medium text-text-secondary mb-2">Login as</label>
-                <div className="flex p-1 bg-bg-secondary/80 rounded-[14px] border border-border-subtle">
-                  <button
-                    type="button"
-                    onClick={() => setRole('customer')}
-                    className={`flex-1 py-2.5 text-[14px] font-medium rounded-[10px] flex items-center justify-center gap-2 transition-all duration-200 ${
-                      role === 'customer'
-                        ? 'bg-bg-card shadow-sm border border-border-subtle/60 text-text-primary'
-                        : 'text-text-secondary hover:text-text-secondary'
-                    }`}
-                  >
-                    <User className={`w-[18px] h-[18px] ${role === 'customer' ? 'text-orange-500' : ''}`} /> Customer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole('admin')}
-                    className={`flex-1 py-2.5 text-[14px] font-medium rounded-[10px] flex items-center justify-center gap-2 transition-all duration-200 ${
-                      role === 'admin'
-                        ? 'bg-bg-card shadow-sm border border-border-subtle/60 text-text-primary'
-                        : 'text-text-secondary hover:text-text-secondary'
-                    }`}
-                  >
-                    <Shield className={`w-[18px] h-[18px] ${role === 'admin' ? 'text-blue-500' : ''}`} /> Admin
-                  </button>
-                </div>
-              </div>
-
               <form onSubmit={handleLoginSubmit(onLogin)} className="space-y-5">
                 <div>
                   <label className="block text-[13px] font-medium text-text-secondary mb-1.5">Email</label>
