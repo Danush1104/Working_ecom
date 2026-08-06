@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { router } from './routes';
 import { ThemeProvider } from './context/ThemeContext';
 import { WishlistProvider } from './context/WishlistContext';
-
+ 
 const queryClient = new QueryClient({
  defaultOptions: {
  queries: {

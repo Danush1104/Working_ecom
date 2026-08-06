@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 # Load .env files for local development
 load_dotenv()
-
+ 
 class Config:
     AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-1")
     PAYMENT_TABLE = os.getenv("PAYMENT_TABLE", "Payments")
