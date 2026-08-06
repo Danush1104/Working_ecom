@@ -42,6 +42,13 @@ jobs:
           npm ci          #installs exact versions of dependencies from package-lock.json 
 
       - name: Build Frontend
+        env:
+          VITE_COGNITO_REGION: ap-southeast-1
+          VITE_COGNITO_USER_POOL_ID: ap-southeast-1_YFOpMiVLd
+          VITE_COGNITO_CLIENT_ID: 2fekbicco9blc7v2tg0795k2g1
+          VITE_PRODUCT_SERVICE_URL: https://qj1y5ztjwb.execute-api.ap-southeast-1.amazonaws.com/inv/api/products
+          VITE_INVENTORY_SERVICE_URL: https://qj1y5ztjwb.execute-api.ap-southeast-1.amazonaws.com/inv/api/inventory
+          VITE_CART_SERVICE_URL: https://qj1y5ztjwb.execute-api.ap-southeast-1.amazonaws.com/inv/api/cart
         run: |
           cd frontend
           npm run build
