@@ -35,7 +35,7 @@ export default function Dashboard() {
  const { user } = useAuth();
  const { theme } = useTheme();
 
- const username = user?.username || 'Admin';
+ const username = user?.email ? user.email.split('@')[0] : (user?.username || 'Admin');
 
  const chartAxisColor = theme === 'dark'? 'rgba(255,255,255,0.4)': 'rgba(0,0,0,0.5)';
  const chartGridColor = theme === 'dark'? 'rgba(255,255,255,0.05)': 'rgba(0,0,0,0.05)';

@@ -85,7 +85,7 @@ export default function AdminLayout() {
  ];
 
  const currentPage = navigation.find(n => n.href === location.pathname)?.name || 'Dashboard';
- const username = user?.username || 'Admin';
+ const username = user?.email ? user.email.split('@')[0] : (user?.username || 'Admin');
  const initial = username.charAt(0).toUpperCase();
 
  return (
