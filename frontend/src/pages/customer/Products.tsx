@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Filter, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { useCategories } from '../../hooks/useCategories';
 import { ProductCard } from '../../components/customer/ProductCard';
 import { useProducts } from '../../hooks/useProducts';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
@@ -23,6 +24,7 @@ export default function Products() {
  const [sliderMax, setSliderMax] = useState(1000);
  
  const { data: products, isLoading, isError } = useProducts();
+ const { data: globalCategories = [] } = useCategories();
 
  useEffect(() => {
  const q = searchParams.get('q');
@@ -33,9 +35,13 @@ export default function Products() {
  }, [searchParams]);
 
  const categories = useMemo(() => {
- if (!products || !Array.isArray(products)) return [];
- return Array.from(new Set(products.map(p => p.category)));
- }, [products]);
+    // Return names of all categories from the API, falling back to product categories if empty
+    if (globalCategories && globalCategories.length > 0) {
+      return Array.from(new Set(globalCategories.map(c => c.name)));
+    }
+    if (!products || !Array.isArray(products)) return [];
+    return Array.from(new Set(products.map(p => p.category)));
+  }, [products, globalCategories]);
 
  // Adjust max slider dynamically based on products if desired, or keep fixed
  useMemo(() => {
