@@ -103,7 +103,7 @@ export default function Checkout() {
  required
  value={email}
  onChange={(e) => setEmail(e.target.value)}
- className="w-full px-4 py-3 rounded-xl border border-border-subtle dark:border-border-subtle bg-bg-card dark:bg-bg-primary text-bg-primary focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+ className="w-full px-4 py-3 rounded-xl border border-border-subtle dark:border-border-subtle bg-bg-card dark:bg-bg-primary text-text-secondary focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
  placeholder="Enter your email"
  />
  </div>
