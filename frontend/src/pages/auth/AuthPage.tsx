@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Store, Loader2, Mail, Lock, Eye, EyeOff, User, Shield, ShieldCheck } from 'lucide-react';
+import { Store, Loader2, Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
@@ -40,7 +40,6 @@ export default function AuthPage() {
 
   // Auth Context state
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [role, setRole] = useState<'customer' | 'admin'>('customer');
   
   // Login form state
   const [showPassword, setShowPassword] = useState(false);

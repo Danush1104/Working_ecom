@@ -1,0 +1,185 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+resource "aws_cloudwatch_dashboard" "ecommerce_dashboard" {
+  dashboard_name = var.dashboard_name
+  dashboard_body = jsonencode({
+    widgets = [
+      # ----------------------------------------------------
+      # GLOBAL OVERVIEW
+      # ----------------------------------------------------
+      {
+        type = "metric", x = 0, y = 0, width = 8, height = 6
+        properties = {
+          title = "CloudFront Metrics (Requests / 4XX / 5XX)"
+          view = "timeSeries", stacked = false, region = "us-east-1"
+          metrics = [
+            [ { expression = "SEARCH('{AWS/CloudFront,DistributionId,Region} MetricName=\"Requests\"', 'Sum', 60)", id = "e1" } ],
+            [ { expression = "SEARCH('{AWS/CloudFront,DistributionId,Region} MetricName=\"4xxErrorRate\"', 'Average', 60)", id = "e2", color = "#ff7f0e" } ],
+            [ { expression = "SEARCH('{AWS/CloudFront,DistributionId,Region} MetricName=\"5xxErrorRate\"', 'Average', 60)", id = "e3", color = "#d62728" } ]
+          ]
+        }
+      },
+      {
+        type = "metric", x = 8, y = 0, width = 8, height = 6
+        properties = {
+          title = "API Gateway - Request Count & Errors"
+          view = "timeSeries", stacked = false, region = var.aws_region
+          metrics = [
+            [ { expression = "SEARCH('{AWS/ApiGateway,ApiName,Stage} MetricName=\"Count\" Stage=\"${var.api_name}\"', 'Sum', 60)", id = "e1", color = "#1f77b4" } ],
+            [ { expression = "SEARCH('{AWS/ApiGateway,ApiName,Stage} MetricName=\"4XXError\" Stage=\"${var.api_name}\"', 'Sum', 60)", id = "e2", color = "#ff7f0e" } ],
+            [ { expression = "SEARCH('{AWS/ApiGateway,ApiName,Stage} MetricName=\"5XXError\" Stage=\"${var.api_name}\"', 'Sum', 60)", id = "e3", color = "#d62728" } ]
+          ]
+        }
+      },
+      {
+        type = "metric", x = 16, y = 0, width = 8, height = 6
+        properties = {
+          title = "API Gateway - Latency (p95)"
+          view = "timeSeries", stacked = false, region = var.aws_region
+          metrics = [
+            [ { expression = "SEARCH('{AWS/ApiGateway,ApiName,Stage} MetricName=\"Latency\" Stage=\"${var.api_name}\"', 'p95', 60)", id = "e1", color = "#9467bd" } ]
+          ]
+        }
+      },
+
+      # ----------------------------------------------------
+      # LAMBDA MICROSERVICES
+      # ----------------------------------------------------
+      {
+        type = "metric", x = 0, y = 6, width = 12, height = 6
+        properties = {
+          title = "Lambda - Invocations"
+          view = "timeSeries", stacked = false, region = var.aws_region
+          metrics = [
+            [ { expression = "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Invocations\" FunctionName=${var.lambda_prefix}', 'Sum', 60)", id = "e1" } ]
+          ]
+        }
+      },
+      {
+        type = "metric", x = 12, y = 6, width = 12, height = 6
+        properties = {
+          title = "Lambda - Errors"
+          view = "timeSeries", stacked = false, region = var.aws_region
+          metrics = [
+            [ { expression = "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Errors\" FunctionName=${var.lambda_prefix}', 'Sum', 60)", id = "e1" } ]
+          ]
+        }
+      },
+      {
+        type = "metric", x = 0, y = 12, width = 8, height = 6
+        properties = {
+          title = "Lambda - Duration (Avg)"
+          view = "timeSeries", stacked = false, region = var.aws_region
+          metrics = [
+            [ { expression = "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Duration\" FunctionName=${var.lambda_prefix}', 'Average', 60)", id = "e1" } ]
+          ]
+        }
+      },
+      {
+        type = "metric", x = 8, y = 12, width = 8, height = 6
+        properties = {
+          title = "Lambda - Throttles"
+          view = "timeSeries", stacked = false, region = var.aws_region
+          metrics = [
+            [ { expression = "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Throttles\" FunctionName=${var.lambda_prefix}', 'Sum', 60)", id = "e1", color = "#d62728" } ]
+          ]
+        }
+      },
+      {
+        type = "metric", x = 16, y = 12, width = 8, height = 6
+        properties = {
+          title = "Lambda - Concurrent Executions"
+          view = "timeSeries", stacked = false, region = var.aws_region
+          metrics = [
+            [ { expression = "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"ConcurrentExecutions\" FunctionName=${var.lambda_prefix}', 'Maximum', 60)", id = "e1" } ]
+          ]
+        }
+      },
+
+      # ----------------------------------------------------
+      # DYNAMODB
+      # ----------------------------------------------------
+      {
+        type = "metric", x = 0, y = 18, width = 12, height = 6
+        properties = {
+          title = "DynamoDB - Capacity Units"
+          view = "timeSeries", stacked = false, region = var.aws_region
+        "metrics" = [
+          [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "danush_products_table", { "stat": "Sum", "label": "products read" } ],
+          [ ".", "ConsumedWriteCapacityUnits", ".", ".", { "stat": "Sum", "label": "products write" } ],
+          [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "danush_cart_table", { "stat": "Sum", "label": "cart read" } ],
+          [ ".", "ConsumedWriteCapacityUnits", ".", ".", { "stat": "Sum", "label": "cart write" } ],
+          [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "danush_orders_table", { "stat": "Sum", "label": "orders read" } ],
+          [ ".", "ConsumedWriteCapacityUnits", ".", ".", { "stat": "Sum", "label": "orders write" } ],
+          [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "danush_payments_table", { "stat": "Sum", "label": "payments read" } ],
+          [ ".", "ConsumedWriteCapacityUnits", ".", ".", { "stat": "Sum", "label": "payments write" } ],
+          [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "danush_processed_events_table", { "stat": "Sum", "label": "events read" } ],
+          [ ".", "ConsumedWriteCapacityUnits", ".", ".", { "stat": "Sum", "label": "events write" } ],
+          [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "danush_reviews_table", { "stat": "Sum", "label": "reviews read" } ],
+          [ ".", "ConsumedWriteCapacityUnits", ".", ".", { "stat": "Sum", "label": "reviews write" } ],
+          [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "danush_wishlist_table", { "stat": "Sum", "label": "wishlist read" } ],
+          [ ".", "ConsumedWriteCapacityUnits", ".", ".", { "stat": "Sum", "label": "wishlist write" } ],
+          [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "danush_inventory", { "stat": "Sum", "label": "inventory read" } ],
+          [ ".", "ConsumedWriteCapacityUnits", ".", ".", { "stat": "Sum", "label": "inventory write" } ]
+        ]
+      },
+      {
+        type = "metric", x = 12, y = 18, width = 12, height = 6
+        properties = {
+          title = "DynamoDB - Throttled Requests"
+          view = "timeSeries", stacked = false, region = var.aws_region
+          metrics = [
+            [ "AWS/DynamoDB", "ThrottledRequests", "TableName", "danush_products_table", { "stat": "Sum" } ],
+            [ ".", ".", ".", "danush_cart_table", { "stat": "Sum" } ],
+            [ ".", ".", ".", "danush_orders_table", { "stat": "Sum" } ],
+            [ ".", ".", ".", "danush_payments_table", { "stat": "Sum" } ],
+            [ ".", ".", ".", "danush_processed_events_table", { "stat": "Sum" } ],
+            [ ".", ".", ".", "danush_reviews_table", { "stat": "Sum" } ],
+            [ ".", ".", ".", "danush_wishlist_table", { "stat": "Sum" } ],
+            [ ".", ".", ".", "danush_inventory", { "stat": "Sum" } ]
+          ]
+        }
+      },
+
+      # ----------------------------------------------------
+      # SNS & SQS
+      # ----------------------------------------------------
+      {
+        type = "metric", x = 0, y = 24, width = 12, height = 6
+        properties = {
+          title = "SNS - Messages Published"
+          view = "timeSeries", stacked = false, region = var.aws_region
+          metrics = [
+            [ "AWS/SNS", "NumberOfMessagesPublished", "TopicName", "danush_order_events_topic", { stat = "Sum" } ]
+          ]
+        }
+      },
+      {
+        type = "metric", x = 12, y = 24, width = 12, height = 6
+        properties = {
+          title = "SQS - Queue Metrics"
+          view = "timeSeries", stacked = false, region = var.aws_region
+          metrics = [
+            [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "danush_notification_queue", { stat = "Sum" } ],
+            [ ".", "ApproximateNumberOfMessagesVisible", ".", ".", { stat = "Maximum" } ],
+            [ ".", "ApproximateAgeOfOldestMessage", ".", ".", { stat = "Maximum" } ],
+            [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "danush_notification_dlq", { stat = "Sum" } ],
+            [ ".", "ApproximateNumberOfMessagesVisible", ".", ".", { stat = "Maximum" } ],
+            [ ".", "ApproximateAgeOfOldestMessage", ".", ".", { stat = "Maximum" } ]
+          ]
+        }
+      }
+    ]
+  })
+}

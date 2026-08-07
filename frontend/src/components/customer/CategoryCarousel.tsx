@@ -86,7 +86,7 @@ export function CategoryCarousel({ categories, activeCategory, onCategorySelect 
   {/* Scrollable Container */}
   <div 
   ref={scrollContainerRef}
-  className="flex items-center justify-start sm:justify-center flex-1 gap-6 sm:gap-10 overflow-x-auto scrollbar-hide px-16 sm:px-20 scroll-smooth"
+  className="flex items-center justify-start flex-1 gap-6 sm:gap-10 overflow-x-auto scrollbar-hide px-16 sm:px-20 scroll-smooth"
   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none'}}
   >
   {displayCategories.map((cat) => {
@@ -111,7 +111,7 @@ export function CategoryCarousel({ categories, activeCategory, onCategorySelect 
   )}
   </div>
   
-  <div className="text-center relative">
+  <div className="text-center relative w-full">
   <p className={`text-xs font-semibold whitespace-nowrap transition-colors ${
   isActive ? 'text-cyan-500': 'text-text-secondary group-hover:text-text-primary'
   }`}>
@@ -121,7 +121,7 @@ export function CategoryCarousel({ categories, activeCategory, onCategorySelect 
   {isActive && (
   <motion.div
   layoutId="activeCategoryUnderline"
-  className="absolute -bottom-3 left-1/2 -translate-x-1/2 h-[3px] w-full bg-cyan-500 rounded-t-full"
+  className="absolute -bottom-3 inset-x-0 h-[3px] bg-cyan-500 rounded-t-full"
   initial={false}
   transition={{ type:"spring", stiffness: 300, damping: 30 }}
   />
