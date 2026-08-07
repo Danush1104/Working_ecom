@@ -7,7 +7,7 @@ class AppError(Exception):
         self.status_code = status_code
 
 
-class ValidationError(AppError):
+class ValidationError(AppError):  
     """Raised when request validation fails."""
     def __init__(self, message: str, error_code: str = "VALIDATION_FAILED"):
         super().__init__(message, error_code, 400)
