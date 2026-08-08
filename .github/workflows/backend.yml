@@ -146,7 +146,8 @@ jobs:
           snyk test \
             --file=${{ matrix.service }}/requirements.txt \
             --package-manager=pip \
-            --severity-threshold=high \
+            --severity-threshold=low \
+            --show-vulnerable-paths=all \
             --json-file-output=snyk-${{ matrix.service }}.json
         continue-on-error: true
 
