@@ -46,6 +46,7 @@ class Order:
     updated_at: str
     payment_id: Optional[str] = None
     customer_username: Optional[str] = None
+    delivery_status: str = "PENDING"
 
     def to_dict(self) -> Dict[str, Any]:
         """Converts the Order instance to a dictionary for DynamoDB storage."""
@@ -73,5 +74,6 @@ class Order:
             created_at=data["created_at"],
             updated_at=data["updated_at"],
             payment_id=data.get("payment_id"),
-            customer_username=data.get("customer_username")
+            customer_username=data.get("customer_username"),
+            delivery_status=data.get("delivery_status", "PENDING")
         )

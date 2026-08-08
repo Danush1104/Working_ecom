@@ -5,7 +5,7 @@ import { DataTable } from '../../components/admin/DataTable';
 import { FilterBar } from '../../components/admin/FilterBar';
 import { FilterDrawer } from '../../components/admin/FilterDrawer';
 import { StatusBadge } from '../../components/admin/StatusBadge';
-import { useAdminOrders } from '../../hooks/useOrders';
+import { useAdminOrders, useUpdateDeliveryStatus } from '../../hooks/useOrders';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import type { Order } from '../../api/orderService';
@@ -18,6 +18,7 @@ import { exportToCSV } from '../../utils/csv';
 
 export default function Orders() {
  const { data: orders, isLoading, isError } = useAdminOrders();
+ const updateDelivery = useUpdateDeliveryStatus();
  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
  
@@ -85,10 +86,25 @@ export default function Orders() {
  header: 'Status', 
  accessor: (item: Order) => <StatusBadge status={item.order_status} />
  },
+ { 
+ header: 'Delivery', 
+ accessor: (item: Order) => <StatusBadge status={item.delivery_status || 'PENDING'} />
+ },
  {
  header: 'Actions',
  className: 'text-right',
- accessor: () => null
+ accessor: (item: Order) => (
+ <button
+ onClick={(e) => {
+ e.stopPropagation();
+ setSelectedOrder(item);
+ setIsViewModalOpen(true);
+ }}
+ className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+ >
+ Manage
+ </button>
+ )
  }
  ];
 
@@ -219,7 +235,42 @@ export default function Orders() {
  </div>
  ) : 'N/A'}
  ] : []}
- />
+ >
+ {selectedOrder && (
+ <div className="mt-6 flex flex-col space-y-3 pt-6 border-t border-border-subtle">
+ <h4 className="text-sm font-semibold text-text-primary">Delivery Actions</h4>
+ <div className="flex flex-col gap-2">
+ <select 
+ value={selectedOrder.delivery_status || 'PENDING'}
+ disabled={updateDelivery.isPending || selectedOrder.delivery_status === 'DELIVERED'}
+ onChange={(e) => {
+ const newStatus = e.target.value;
+ updateDelivery.mutate(
+ { userId: selectedOrder.user_id, orderId: selectedOrder.order_id, status: newStatus },
+ {
+ onSuccess: () => {
+ setSelectedOrder(prev => prev ? { ...prev, delivery_status: newStatus } : null);
+ }
+ }
+ );
+ }}
+ className="w-full bg-bg-secondary text-text-primary dark:text-white border border-border-subtle rounded-xl p-3 focus:outline-none focus:border-primary transition-colors disabled:opacity-50"
+ >
+ <option className="bg-bg-secondary dark:text-white" value="PENDING" disabled>Pending Payment</option>
+ <option className="bg-bg-secondary dark:text-white" value="ORDER_CONFIRMED" disabled={selectedOrder.delivery_status !== 'ORDER_CONFIRMED'}>Order Confirmed</option>
+ <option className="bg-bg-secondary dark:text-white" value="SHIPPED" disabled={selectedOrder.delivery_status === 'PENDING'}>Shipped</option>
+ <option className="bg-bg-secondary dark:text-white" value="DELIVERED" disabled={selectedOrder.delivery_status !== 'SHIPPED' && selectedOrder.delivery_status !== 'DELIVERED'}>Delivered</option>
+ </select>
+ {selectedOrder.delivery_status === 'DELIVERED' && (
+ <div className="flex items-center gap-2 text-green-500 font-medium text-sm mt-1">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+ Order has been delivered.
+ </div>
+ )}
+ </div>
+ </div>
+ )}
+ </DetailDrawer>
  </motion.div>
  );
 }

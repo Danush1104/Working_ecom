@@ -21,6 +21,7 @@ export interface Order {
  customer_email: string;
  created_at: string;
  updated_at: string;
+ delivery_status?: string;
 }
 
 export interface CheckoutPayload {
@@ -70,5 +71,12 @@ export const orderService = {
  return response.data.data.orders;
  }
  return [];
+ },
+
+ updateDeliveryStatus: async (userId: string, orderId: string, status: string): Promise<Order> => {
+ const response = await apiClient.patch(`${ORDER_API_URL}/${userId}/${orderId}/delivery`, {
+ delivery_status: status
+ });
+ return response.data.data;
  }
 };

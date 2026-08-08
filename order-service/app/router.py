@@ -7,7 +7,8 @@ from app.handlers import (
     cancel_order,
     update_payment,
     health,
-    view_all_orders
+    view_all_orders,
+    update_delivery
 )
 from app.errors import NotFoundError
 
@@ -18,6 +19,7 @@ ROUTE_PATTERNS = [
     ("POST", re.compile(r"^/api/orders/?$"), checkout.handle),
     ("PATCH", re.compile(r"^/api/orders/(?P<user_id>[^/]+)/(?P<order_id>[^/]+)/cancel/?$"), cancel_order.handle),
     ("PATCH", re.compile(r"^/internal/orders/(?P<user_id>[^/]+)/(?P<order_id>[^/]+)/payment/?$"), update_payment.handle),
+    ("PATCH", re.compile(r"^/api/orders/(?P<user_id>[^/]+)/(?P<order_id>[^/]+)/delivery/?$"), update_delivery.handle),
     ("GET", re.compile(r"^/api/orders/all/?$"), view_all_orders.handle),
     ("GET", re.compile(r"^/api/orders/(?P<user_id>[^/]+)/(?P<order_id>[^/]+)/?$"), get_order.handle),
     ("GET", re.compile(r"^/api/orders/(?P<user_id>[^/]+)/?$"), get_user_orders.handle),

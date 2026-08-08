@@ -7,9 +7,10 @@ interface DetailDrawerProps {
  onClose: () => void;
  title: string;
  fields: { label: string; value: ReactNode }[];
+ children?: ReactNode;
 }
 
-export function DetailDrawer({ isOpen, onClose, title, fields }: DetailDrawerProps) {
+export function DetailDrawer({ isOpen, onClose, title, fields, children }: DetailDrawerProps) {
  return (
  <AnimatePresence>
  {isOpen && (
@@ -58,6 +59,7 @@ export function DetailDrawer({ isOpen, onClose, title, fields }: DetailDrawerPro
  </div>
  ))}
  </div>
+ {children}
  </div>
  
  {/* Footer */}

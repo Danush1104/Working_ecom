@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from app.services.order_service import OrderService
 
 def test_checkout(mock_dynamodb_and_sns):
@@ -69,4 +69,41 @@ def test_update_payment(mock_dynamodb_and_sns):
     assert updated["order_status"] == "PROCESSING"
     assert updated["payment_status"] == "SUCCESS"
     assert updated["payment_id"] == "PAY-123"
+    assert updated.get("delivery_status") == "ORDER_CONFIRMED"
 
+def test_update_delivery_status(mock_dynamodb_and_sns):
+    from app.errors import ConflictError
+    service = OrderService()
+    data = {
+        "user_id": "USER1",
+        "payment_method": "CARD",
+        "customer_email": "test@example.com"
+    }
+    order = service.checkout(data)
+    
+    # 1. Reject transition if PENDING
+    with pytest.raises(ConflictError):
+        service.update_delivery_status("USER1", order["order_id"], "SHIPPED")
+
+    # 2. Pay successfully (moves to ORDER_CONFIRMED)
+    service.update_payment(
+        "USER1", 
+        order["order_id"], 
+        {"payment_status": "SUCCESS", "payment_id": "PAY-123"}
+    )
+
+    # 3. Reject skip to DELIVERED
+    with pytest.raises(ConflictError):
+        service.update_delivery_status("USER1", order["order_id"], "DELIVERED")
+
+    # 4. Valid transition to SHIPPED
+    updated = service.update_delivery_status("USER1", order["order_id"], "SHIPPED")
+    assert updated["delivery_status"] == "SHIPPED"
+
+    # 5. Reject backwards transition
+    with pytest.raises(ConflictError):
+        service.update_delivery_status("USER1", order["order_id"], "ORDER_CONFIRMED")
+
+    # 6. Valid transition to DELIVERED
+    final = service.update_delivery_status("USER1", order["order_id"], "DELIVERED")
+    assert final["delivery_status"] == "DELIVERED"

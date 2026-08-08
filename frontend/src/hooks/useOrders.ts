@@ -84,3 +84,22 @@ export const useCancelOrder = (userId: string | undefined) => {
  }
  });
 };
+
+export const useUpdateDeliveryStatus = () => {
+ const queryClient = useQueryClient();
+
+ return useMutation({
+ mutationFn: ({ userId, orderId, status }: { userId: string; orderId: string; status: string }) => 
+ orderService.updateDeliveryStatus(userId, orderId, status),
+ onSuccess: (updatedOrder) => {
+ toast.success(`Delivery status updated to ${updatedOrder.delivery_status}`);
+ queryClient.invalidateQueries({ queryKey: ['admin_orders'] });
+ queryClient.invalidateQueries({ queryKey: ['orders'] });
+ queryClient.invalidateQueries({ queryKey: ['order'] });
+ },
+ onError: (error: any) => {
+ const msg = error.response?.data?.message || error.message || 'Failed to update delivery status';
+ toast.error(msg);
+ },
+ });
+};

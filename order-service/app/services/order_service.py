@@ -292,6 +292,7 @@ class OrderService:
 
             order.order_status = "PROCESSING"
             order.payment_status = "SUCCESS"
+            order.delivery_status = "ORDER_CONFIRMED"
 
         elif new_payment_status == "FAILED":
             # Release inventory reservation back to available stock
@@ -384,3 +385,36 @@ class OrderService:
         if limit is None:
             orders.sort(key=lambda o: o.created_at, reverse=True)
         return [order.to_dict() for order in orders], next_key
+
+    def update_delivery_status(self, user_id: str, order_id: str, new_status: str) -> Dict[str, Any]:
+        """
+        Updates the delivery status of an order ensuring a linear, one-way progression:
+        ORDER_CONFIRMED -> SHIPPED -> DELIVERED.
+        """
+        order = self.repository.get_order(user_id, order_id)
+        if not order:
+            raise NotFoundError(f"Order with ID {order_id} not found", ERROR_ORDER_NOT_FOUND)
+
+        current_status = getattr(order, "delivery_status", "PENDING")
+
+        # Linear state machine rules
+        if current_status == "DELIVERED":
+            raise ConflictError("Order is already delivered and cannot be changed.", ERROR_INVALID_REQUEST)
+        elif current_status == "SHIPPED":
+            if new_status != "DELIVERED":
+                raise ConflictError(f"Cannot transition delivery status from SHIPPED to {new_status}. Must be DELIVERED.", ERROR_INVALID_REQUEST)
+        elif current_status == "ORDER_CONFIRMED":
+            if new_status != "SHIPPED":
+                raise ConflictError(f"Cannot transition delivery status from ORDER_CONFIRMED to {new_status}. Must be SHIPPED.", ERROR_INVALID_REQUEST)
+        elif current_status == "PENDING":
+            if new_status == "ORDER_CONFIRMED" and order.payment_status == "SUCCESS":
+                # Allow admins to manually confirm legacy orders that missed the webhook update
+                pass
+            else:
+                raise ConflictError("Order is PENDING. Payment must succeed before shipping.", ERROR_INVALID_REQUEST)
+        else:
+            raise ConflictError(f"Unknown current delivery status: {current_status}", ERROR_INVALID_REQUEST)
+
+        order.delivery_status = new_status
+        self.repository.save_order(order)
+        return order.to_dict()
